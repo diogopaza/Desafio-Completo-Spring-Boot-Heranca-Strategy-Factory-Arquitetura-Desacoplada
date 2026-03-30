@@ -348,3 +348,15 @@ Após concluir:
 👉 Eu vou te avaliar como em uma entrevista técnica real (com nota e feedback detalhado)
 
 ---
+
+# 🧠 Respsotas
+# 🧠 PARTE 1 — HERANÇA (SINGLE_TABLE)
+## ❓ Perguntas (responda no README)
+
+1. Por que `SINGLE_TABLE` pode gerar muitas colunas nulas?
+   R: Na estrategia Sinlge Table e usada Heranca simples, dessa forma o JPA cria unica tabela para as subclasses oriundas
+   da classe principal (ou classe mae). Cada subclasse pode ter varios atributos e nao necessariamente iguais umas das outras, com isso em um insert na tabela A por exemplo os atributos que existem na tabela A e nao existem na tabela B irao ficar null na tabela b, ou seja a Tabela Geral que no banco de dados e mesma de para A e B apenas tem um dtype diferente, tende a ter varias colunas com null. 
+3. Qual vantagem de performance dessa estratégia?
+   R: Eu acredito que e possivel o uso de indices conforme demonstrado no codigo. 
+5. Em que cenário ela NÃO seria uma boa escolha?
+
