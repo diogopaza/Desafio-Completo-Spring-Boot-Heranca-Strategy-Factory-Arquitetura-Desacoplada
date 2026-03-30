@@ -1,112 +1,144 @@
-# 🧪 Desafio Completo — Spring Boot (Herança + Strategy + Factory + Arquitetura Desacoplada)
+# 🧪 Desafio Completo — Spring Boot (HERANÇA + JOINED + STRATEGY + FACTORY)
 
 ---
 
 ## 🎯 Objetivo
 
-Construir uma API REST completa que demonstre:
+Construir uma API REST que demonstre domínio de:
 
-* Herança com JPA (`SINGLE_TABLE`)
+* Herança JPA (`SINGLE_TABLE` e `JOINED`)
 * Polimorfismo real
-* Strategy Pattern (comportamento)
-* Factory Pattern (criação de objetos)
+* Strategy Pattern
+* Factory Pattern
 * Arquitetura desacoplada
+* Tomada de decisão arquitetural
 
 ---
 
 ## 🕒 Prazo
 
-* Base obrigatória: **48h**
-* Completo (nível avançado): **72h**
+* Base: 48h
+* Completo: 72h
 
 ---
 
-# 📦 Cenário
-
-Sistema de **Pagamentos**, onde cada tipo possui:
-
-* Estrutura própria (dados)
-* Comportamento próprio (processamento)
-
----
-
-# 🧱 ETAPA 1 — MODELAGEM (HERANÇA)
+# 🧠 PARTE 1 — HERANÇA (SINGLE_TABLE)
 
 ## Você deve:
 
-* Criar uma classe base **abstrata**
-* Configurar herança com `SINGLE_TABLE`
-* Definir coluna discriminadora
+* Implementar herança com `SINGLE_TABLE`
+* Criar:
 
-Criar subclasses:
-
-* Cartão de crédito
-* Pix
-* Boleto
-
-Cada uma deve possuir atributos próprios
+  * Classe base abstrata
+  * Subclasses (Pix, Cartão, Boleto)
 
 ---
 
 ## ✅ Resultado esperado:
 
-* Apenas **uma tabela no banco**
-* Coluna que identifica o tipo
-* Colunas específicas por tipo (com valores nulos quando não aplicável)
+* Uma única tabela
+* Coluna discriminadora
+* Colunas nulas para tipos diferentes
 
 ---
 
-# 🌐 ETAPA 2 — API REST
+## ❓ Perguntas (responda no README)
 
-## Você deve implementar:
+1. Por que `SINGLE_TABLE` pode gerar muitas colunas nulas?
+2. Qual vantagem de performance dessa estratégia?
+3. Em que cenário ela NÃO seria uma boa escolha?
 
-* Criação de pagamentos (endpoint único)
-* Listagem de todos os pagamentos
-* Busca por ID
+---
+
+## 🎯 Avaliação (0 a 10)
+
+* Uso correto da herança
+* Entendimento conceitual
+
+---
+
+# 🧠 PARTE 2 — HERANÇA (JOINED)
+
+## Você deve:
+
+* Criar uma **segunda versão da modelagem**
+* Utilizar `InheritanceType.JOINED`
 
 ---
 
 ## ✅ Resultado esperado:
 
-* API funcional
-* Dados persistidos corretamente
-* Retorno com polimorfismo
+* Uma tabela para a classe base
+* Uma tabela para cada subclasse
+* Relacionamento via chave estrangeira
 
 ---
 
-# 🔁 ETAPA 3 — POLIMORFISMO
+## ❓ Perguntas
+
+1. Qual a principal diferença estrutural entre `SINGLE_TABLE` e `JOINED`?
+2. Qual delas tem melhor performance? Por quê?
+3. Qual delas evita colunas nulas?
+4. Em que cenário você escolheria `JOINED`?
+
+---
+
+## 🎯 Avaliação (0 a 10)
+
+* Clareza na comparação
+* Entendimento de trade-offs
+
+---
+
+# 🔁 PARTE 3 — POLIMORFISMO
 
 ## Você deve:
 
 * Buscar dados usando a classe base
-* Retornar diretamente os resultados
+* Retornar diretamente os objetos
 
 ---
 
 ## 🚨 Regras:
 
 * NÃO usar `instanceof`
-* NÃO usar `if` baseado em tipo
+* NÃO usar `if`
 * NÃO usar `switch`
 
 ---
 
 ## ✅ Resultado esperado:
 
-* Lista com objetos de tipos diferentes
-* Cada objeto com seus próprios campos
-* Sistema identifica automaticamente o tipo
+* Lista com múltiplos tipos
+* Cada objeto com seus próprios atributos
 
 ---
 
-# 🧱 ETAPA 4 — ARQUITETURA DESACOPLADA
+## ❓ Perguntas
 
-## Você deve separar:
+1. Como o Hibernate sabe qual classe instanciar?
+2. Onde o polimorfismo está acontecendo nesse fluxo?
+3. Por que usar `instanceof` quebra o conceito?
 
-* Controller → entrada/saída
-* Service → regras de negócio
-* Repository → acesso ao banco
-* DTO → entrada/saída da API
+---
+
+## 🎯 Avaliação (0 a 10)
+
+* Entendimento de polimorfismo
+* Aplicação prática
+
+---
+
+# 🧱 PARTE 4 — ARQUITETURA DESACOPLADA
+
+## Você deve:
+
+Separar corretamente:
+
+* Controller
+* Service
+* Repository
+* DTO
 
 ---
 
@@ -114,185 +146,205 @@ Cada uma deve possuir atributos próprios
 
 * Código organizado
 * Baixo acoplamento
-* Responsabilidades bem definidas
 
 ---
 
-# 🏭 ETAPA 5 — FACTORY PATTERN (CRIAÇÃO)
+## ❓ Perguntas
+
+1. Por que não devemos colocar regra de negócio no controller?
+2. Qual o papel do service?
+3. Por que usar DTO ao invés de entidade?
+
+---
+
+## 🎯 Avaliação (0 a 10)
+
+* Organização
+* Boas práticas
+
+---
+
+# 🏭 PARTE 5 — FACTORY PATTERN
 
 ## Você deve:
 
-* Criar uma estrutura responsável por instanciar os tipos de pagamento
-* Receber dados genéricos (com tipo)
-* Retornar o objeto correto
+* Criar uma estrutura responsável por instanciar pagamentos
+* Receber tipo + dados
+* Retornar objeto correto
 
 ---
 
 ## 🚨 Regras:
 
-* Controller NÃO pode instanciar objetos diretamente
-* Service NÃO deve conter lógica de criação
+* NÃO usar `new` fora da factory
+* NÃO espalhar lógica de criação
 
 ---
 
 ## ✅ Resultado esperado:
 
 * Criação centralizada
-* Fácil adição de novos tipos
-* Código limpo e extensível
+* Código extensível
 
 ---
 
-# ⚙️ ETAPA 6 — STRATEGY PATTERN (COMPORTAMENTO)
+## ❓ Perguntas
+
+1. Qual problema a Factory resolve?
+2. O que acontece se você não usar Factory nesse cenário?
+3. Como adicionar um novo tipo sem alterar código existente?
+
+---
+
+## 🎯 Avaliação (0 a 10)
+
+* Uso correto do padrão
+* Clareza da solução
+
+---
+
+# ⚙️ PARTE 6 — STRATEGY PATTERN
 
 ## Você deve:
 
-* Criar uma estrutura para processar pagamentos
-* Cada tipo deve ter seu próprio comportamento
-
----
-
-## Você deve implementar:
-
-* Interface de comportamento
-* Implementações separadas por tipo
+* Criar comportamento para processar pagamento
+* Cada tipo com lógica própria
 
 ---
 
 ## 🚨 Regras:
 
-* NÃO usar `if` ou `switch` para decidir comportamento
+* NÃO usar `if`
 * NÃO usar `instanceof`
 
 ---
 
 ## ✅ Resultado esperado:
 
-* Cada tipo processa de forma diferente
-* Sistema escolhe automaticamente o comportamento correto
-* Código aberto para extensão
+* Cada tipo executa comportamento diferente
+* Sistema escolhe automaticamente
 
 ---
 
-# 🔗 ETAPA 7 — INTEGRAÇÃO (FLUXO COMPLETO)
+## ❓ Perguntas
 
-## Fluxo esperado:
+1. Qual problema o Strategy resolve?
+2. Qual a diferença entre Strategy e herança?
+3. Quando usar Strategy ao invés de if/switch?
 
-1. Receber requisição com tipo de pagamento
-2. Factory cria o objeto correto
-3. Objeto é salvo no banco
-4. Sistema recupera o objeto
-5. Strategy correta é aplicada automaticamente
-6. Resultado é retornado
+---
+
+## 🎯 Avaliação (0 a 10)
+
+* Aplicação correta
+* Entendimento conceitual
+
+---
+
+# 🔗 PARTE 7 — FLUXO COMPLETO
+
+## Você deve implementar:
+
+Fluxo completo:
+
+1. Receber requisição
+2. Factory cria objeto
+3. Salvar no banco
+4. Recuperar objeto
+5. Aplicar Strategy
+6. Retornar resposta
 
 ---
 
 ## ✅ Resultado esperado:
 
-* Fluxo completo funcionando
+* Sistema funcionando ponta a ponta
 * Sem lógica condicional baseada em tipo
-* Total desacoplamento
 
 ---
 
-# 🛑 ETAPA 8 — VALIDAÇÃO E ERROS
+## ❓ Perguntas
+
+1. Onde estão aplicados os princípios SOLID?
+2. O sistema está aberto para extensão? Explique.
+3. O que aconteceria ao adicionar um novo tipo de pagamento?
+
+---
+
+## 🎯 Avaliação (0 a 10)
+
+* Integração
+* Arquitetura
+
+---
+
+# 🛑 PARTE 8 — VALIDAÇÃO E ERROS
 
 ## Você deve:
 
-* Validar dados de entrada
-* Tratar:
-
-  * Tipo inválido
-  * Campos obrigatórios
-  * ID inexistente
+* Validar entradas
+* Tratar erros
 
 ---
 
 ## ✅ Resultado esperado:
 
 * API robusta
-* Erros controlados
-* Mensagens claras
+* Respostas claras
 
 ---
 
-# 📁 ENTREGÁVEIS
+## ❓ Perguntas
 
-## ✅ Código
-
-* Projeto completo e funcional
-* Estrutura organizada
+1. Por que validar na entrada é importante?
+2. Qual o impacto de não tratar erros?
 
 ---
 
-## ✅ README
+## 🎯 Avaliação (0 a 10)
 
-Explicando:
-
-* Como rodar o projeto
-* Como testar endpoints
-* Estrutura da aplicação
-* Decisões de arquitetura
-* Explicação de:
-
-  * Herança (SINGLE_TABLE)
-  * Polimorfismo
-  * Strategy Pattern
-  * Factory Pattern
+* Robustez
+* Qualidade
 
 ---
 
-## ✅ Evidência do banco
+# 📊 AVALIAÇÃO FINAL
 
-* Print da tabela
-  OU
-* Script SQL
+Você deve se autoavaliar:
 
----
-
-# 🧠 CRITÉRIOS DE AVALIAÇÃO
-
-* Modelagem correta de herança
-* Uso correto de polimorfismo
-* Ausência de lógica condicional baseada em tipo
-* Aplicação de Strategy Pattern
-* Aplicação de Factory Pattern
-* Arquitetura desacoplada
-* Clareza e organização do código
+| Etapa                | Nota (0–10) |
+| -------------------- | ----------- |
+| Herança SINGLE_TABLE |             |
+| Herança JOINED       |             |
+| Polimorfismo         |             |
+| Arquitetura          |             |
+| Factory              |             |
+| Strategy             |             |
+| Integração           |             |
+| Validação            |             |
 
 ---
 
-# ⚠️ ERROS QUE ELIMINAM
+# 🏁 RESULTADO FINAL ESPERADO
 
-* Uso de `instanceof`
-* Uso de `if` para decidir tipo
-* Lógica de criação espalhada
-* Lógica de comportamento acoplada
-* Retornar entidades diretamente
-* Código sem separação de camadas
+Você deve demonstrar:
 
----
-
-# 🚀 RESULTADO FINAL ESPERADO
-
-O sistema deve:
-
-* Persistir diferentes tipos em uma única tabela
-* Retornar dados polimórficos corretamente
-* Criar objetos de forma centralizada
-* Processar comportamentos sem condicionais
-* Estar preparado para expansão sem alteração de código existente
+* Domínio de herança no JPA
+* Capacidade de modelagem
+* Uso correto de padrões de projeto
+* Arquitetura limpa
+* Código preparado para crescimento
 
 ---
 
-# 💬 OBJETIVO FINAL
+# 💬 INSTRUÇÃO FINAL
 
-Ao concluir este desafio, você deve dominar:
+Após concluir:
 
-* Herança no JPA (nível real)
-* Polimorfismo aplicado
-* Strategy Pattern na prática
-* Factory Pattern na prática
-* Arquitetura desacoplada (nível profissional)
+* Responda todas as perguntas
+* Me envie suas respostas
+* Me envie seu código
+
+👉 Eu vou te avaliar como em uma entrevista técnica real (com nota e feedback detalhado)
 
 ---
