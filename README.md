@@ -497,10 +497,13 @@ Pensar mais em design do retorno
 ## ❓ Perguntas (responda no README)
 
 1. Qual a principal diferença estrutural entre SINGLE_TABLE e JOINED?
-2. Qual delas tem melhor performance? Por quê?
-3. Qual delas evita colunas nulas?
-4. Em que cenário você escolheria JOINED?  
-
+   R: Single table cria uma tabela principal apenas, pode haver varias subclasses com a anotacao @Enitty com relacao de heranca, porem apenas uma tabela sera criada no banco de dados. Havera uma coluna geralmente chamada de dtype que ira diferenciar cada entidade no banco. Joined sao criadas varias tabelas, a tabela principal e as subclasses tambem geram suas proprias tabelas. 
+3. Qual delas tem melhor performance? Por quê?
+   R: Single table tem melhor performance pois Joined e necessario uso de Joins para realizar consulta aumentando o fluxo de I/O. 
+5. Qual delas evita colunas nulas?
+   R: Joined evita colunas null.
+7. Em que cenário você escolheria JOINED?  
+   R: Cenarios mais complexos com maior numero de tabelas (entidades JPA), pois nao teremos um numero tao grande de campos null.
 PARTE 2 — AVALIACAO DO ChatGPT
 
 
