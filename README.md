@@ -349,7 +349,7 @@ Após concluir:
 
 ---
 
-# 🧠 Respsotas
+# 🧠 Respostas
 # 🧠 PARTE 1 — HERANÇA (SINGLE_TABLE)
 ## ❓ Perguntas (responda no README)
 
@@ -488,3 +488,21 @@ Pensar mais em design do retorno
 🧠 Frase que você já pode usar em entrevista
 
 “SINGLE_TABLE é eficiente por evitar JOINs e reduzir custo de I/O, mas tem trade-off de colunas nulas e manutenção quando as subclasses divergem muito.”
+
+----------------------------
+----------------------------------------------
+
+# 🧠 Respostas
+# 🧠 PARTE 2 —  HERANÇA (JOINED)
+## ❓ Perguntas (responda no README)
+
+1. Qual a principal diferença estrutural entre SINGLE_TABLE e JOINED?
+2. Qual delas tem melhor performance? Por quê?
+3. Qual delas evita colunas nulas?
+4. Em que cenário você escolheria JOINED?  
+
+PARTE 2 — AVALIACAO DO ChatGPT
+
+
+
+
