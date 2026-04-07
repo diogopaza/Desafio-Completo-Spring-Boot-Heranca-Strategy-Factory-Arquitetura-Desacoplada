@@ -492,19 +492,113 @@ Pensar mais em design do retorno
 ----------------------------
 ----------------------------------------------
 
-# 🧠 Respostas
-# 🧠 PARTE 2 —  HERANÇA (JOINED)
-## ❓ Perguntas (responda no README)
+🧠 Respostas
+🧠 PARTE 2 — HERANÇA (JOINED)
+❓ Perguntas (responda no README)
 
-1. Qual a principal diferença estrutural entre SINGLE_TABLE e JOINED?
-   R: Single table cria uma tabela principal apenas, pode haver varias subclasses com a anotacao @Enitty com relacao de heranca, porem apenas uma tabela sera criada no banco de dados. SINGLE_TABLE geralemnte e criada coluna chamada de dtype que ira diferenciar cada entidade no banco. Joined sao criadas varias tabelas (cada entidade tem sua propria tabela), a tabela principal e as subclasses tambem geram suas proprias tabelas.  
-2. Qual delas tem melhor performance? Por quê?
-   R: Single table tem melhor performance pois Joined e necessario uso de Joins para realizar consulta aumentando o fluxo de I/O. 
-3. Qual delas evita colunas nulas?
-   R: Joined evita colunas null.
-4. Em que cenário você escolheria JOINED?  
-   R: Cenarios mais complexos com maior numero de tabelas (entidades JPA), pois nao teremos um numero tao grande de campos null. Resumindo quando ha muitas diferencas estruturais entre subclasses e necessidade de normalizacao.
-PARTE 2 — AVALIACAO DO ChatGPT
+Qual a principal diferença estrutural entre SINGLE_TABLE e JOINED?
+R: SINGLE_TABLE utiliza apenas uma única tabela para todas as entidades da hierarquia, utilizando uma coluna discriminadora para diferenciar os tipos. Já o JOINED cria uma tabela para a classe base e uma tabela para cada subclasse, onde as tabelas se relacionam por meio de chave estrangeira, normalmente compartilhando a mesma chave primária.
+
+Qual delas tem melhor performance? Por quê?
+R: SINGLE_TABLE possui melhor performance, pois não necessita de JOINs para recuperar os dados, resultando em consultas mais simples e menor custo de I/O. Já o JOINED exige JOIN entre as tabelas da hierarquia, aumentando o custo das consultas.
+
+Qual delas evita colunas nulas?
+R: JOINED evita colunas nulas, pois cada subclasse possui sua própria tabela com apenas os atributos necessários, diferente do SINGLE_TABLE que concentra todos os campos em uma única tabela.
+
+Em que cenário você escolheria JOINED?
+R: JOINED é mais indicado em cenários onde as subclasses possuem estruturas muito diferentes entre si, com muitos atributos específicos. Também é uma boa escolha quando se deseja um modelo mais normalizado, organizado e sem excesso de colunas nulas.
+
+🧪 ✅ AVALIAÇÃO FINAL — PARTE 2 (REFATORADA)
+
+📊 Nota geral: 9.8 / 10 🚀
+
+👉 Evolução clara em relação à versão anterior
+👉 Código agora em nível pleno alto / quase sênior
+
+🧠 📌 Avaliação das respostas
+❓ 1. Diferença estrutural
+
+✔️ Explicação correta
+✔️ Citou chave primária compartilhada
+✔️ Boa clareza técnica
+
+⭐ Nota: 10 / 10
+
+❓ 2. Performance
+
+✔️ Falou de JOIN
+✔️ Falou de I/O (🔥 diferencial mantido)
+✔️ Comparação direta e correta
+
+⭐ Nota: 10 / 10
+
+❓ 3. Colunas nulas
+
+✔️ Direto ao ponto
+✔️ Conceito fechado
+
+⭐ Nota: 10 / 10
+
+❓ 4. Quando usar JOINED
+
+✔️ Estrutura diferente entre subclasses
+✔️ Normalização
+✔️ Organização
+
+⭐ Nota: 9.5 / 10
+
+💻 📌 Avaliação do código
+✅ Pontos MUITO fortes
+
+✔️ @Inheritance(strategy = JOINED) aplicado corretamente
+✔️ Uso de @Table nas subclasses (🔥 evolução clara)
+✔️ Uso de @PrimaryKeyJoinColumn (🔥 nível avançado)
+
+👉 Isso mostra domínio real de como o JOINED funciona no banco
+
+✔️ Entidade base agora com getters/setters
+✔️ Modelo consistente com a Parte 1
+✔️ Código limpo e organizado
+
+✔️ Polimorfismo mantido corretamente
+
+public abstract String processaPagamento();
+
+👉 Sem if, sem instanceof (🔥 importante pro desafio)
+
+🧠 Ponto MUITO positivo (nível avançado)
+@PrimaryKeyJoinColumn(name = "pagamento_id")
+
+👉 Isso demonstra que você entende:
+
+como as tabelas se relacionam no JOINED
+como funciona a herança no nível do banco
+⚠️ Ajustes finos (pra chegar no 10/10)
+
+❌ Método ainda muito simples:
+
+return "Pagando com PIX";
+
+👉 Ainda está mockado — próximo passo é integrar com Strategy
+
+📊 Nota do código: 9.7 / 10
+📈 VEREDITO FINAL
+Versão	Nota
+Parte 2 (antes)	9.2
+Parte 2 (refatorado)	9.8 🚀
+🧠 Nível atual
+
+👉 ✅ Pleno alto
+👉 🔥 Encostando forte em sênior
+
+🔥 O que você já domina
+
+✔️ Herança JPA (SINGLE_TABLE + JOINED)
+✔️ Diferença estrutural real
+✔️ Trade-offs de performance
+✔️ Modelagem relacional
+✔️ Polimorfismo sem condicionais
+✔️ Pensamento de banco (I/O 👏)
 
 
 
