@@ -23,6 +23,9 @@ public abstract class PagamentoSingleTable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "type", insertable = false, updatable = false)
+    private String type;
+
     private BigDecimal valor;
 
     private LocalDate data;
@@ -49,5 +52,13 @@ public abstract class PagamentoSingleTable {
 
     public void setData(LocalDate data) {
         this.data = data;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

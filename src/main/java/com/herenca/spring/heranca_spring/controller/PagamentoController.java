@@ -27,9 +27,13 @@ public class PagamentoController {
         return ResponseEntity.ok().body(pagamentoService.buscaTodosPagamentos());
     }
 
-    @PostMapping()
-    public void receberPagamento() {
-
+    @GetMapping(params = "tipo")
+    public ResponseEntity<?> retornarPorTipoDePagamento(
+            @RequestParam(required = false) String tipo) {
+        if(tipo != null) {
+            return ResponseEntity.ok().body(pagamentoService.listarTodosPagamentosPorTipo(tipo));
+        }
+        return ResponseEntity.badRequest().body("Defina um tipo de pagamento");
     }
 
 

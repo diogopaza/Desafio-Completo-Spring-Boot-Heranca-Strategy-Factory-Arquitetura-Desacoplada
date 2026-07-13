@@ -29,4 +29,8 @@ public class PagamentoService {
                 .map(PagamentoSingleTable::toDTO)
                 .toList();
     }
+
+    public List<PagamentoDTO> listarTodosPagamentosPorTipo(String tipo) {
+        return pagamentoRepository.listarTodosPagamentosPorTipo(tipo);
+    }
 }

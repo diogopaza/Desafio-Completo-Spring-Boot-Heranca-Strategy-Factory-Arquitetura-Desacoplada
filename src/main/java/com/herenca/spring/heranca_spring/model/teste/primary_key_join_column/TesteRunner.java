@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class TesteRunner {
 
-    @Bean
     public CommandLineRunner testePagamento(CartaoRepositoryTeste cartaoRepositoryTeste) {
         return args -> {
             CartaoTeste cartaoTeste = new CartaoTeste();
