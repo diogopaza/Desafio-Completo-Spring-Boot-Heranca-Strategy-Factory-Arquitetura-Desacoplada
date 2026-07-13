@@ -1,5 +1,6 @@
 package com.herenca.spring.heranca_spring.model.single_table;
 
+import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -32,9 +33,21 @@ public abstract class PagamentoSingleTable {
        return nomeInstituicao;
    }
 
+    public abstract PagamentoDTO toDTO();
 
+    public BigDecimal getValor() {
+        return valor;
+    }
 
+    public void setValor(BigDecimal valor) {
+        this.valor = valor;
+    }
 
+    public LocalDate getData() {
+        return data;
+    }
 
-
+    public void setData(LocalDate data) {
+        this.data = data;
+    }
 }

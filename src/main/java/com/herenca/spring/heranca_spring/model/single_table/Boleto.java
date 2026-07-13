@@ -1,5 +1,6 @@
 package com.herenca.spring.heranca_spring.model.single_table;
 
+import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
@@ -12,6 +13,18 @@ public class Boleto extends PagamentoSingleTable {
     @Override
     public String processaPagamento() {
         return "Pagando no boleto";
+    }
+
+    @Override
+    public PagamentoDTO toDTO() {
+        return new PagamentoDTO(
+            "Boleto",
+            getValor(),
+                getData(),
+                getNumeroBoleto(),
+                null,
+                null
+        );
     }
 
     public String getNumeroBoleto() {

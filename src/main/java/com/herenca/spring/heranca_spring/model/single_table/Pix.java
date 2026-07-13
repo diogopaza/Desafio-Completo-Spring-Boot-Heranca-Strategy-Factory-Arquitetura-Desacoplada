@@ -1,6 +1,7 @@
 package com.herenca.spring.heranca_spring.model.single_table;
 
 
+import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
@@ -12,6 +13,18 @@ public class Pix extends PagamentoSingleTable {
     @Override
     public String processaPagamento() {
         return "Pagando com PIX";
+    }
+
+    @Override
+    public PagamentoDTO toDTO() {
+        return new PagamentoDTO(
+                "Pix",
+                getValor(),
+                getData(),
+                null,
+                null,
+                getChavePix()
+        );
     }
 
     public String getChavePix() {

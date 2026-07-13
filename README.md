@@ -2,6 +2,38 @@
 
 ---
 
+## 🔄 Recomeçando (2026-07-11) — revisão feita com Claude
+
+As Partes 1–4 foram avaliadas anteriormente pelo ChatGPT com notas 9.5–9.8/10. Na revisão com Claude, conferindo código real (não só o texto da avaliação), várias correções "confirmadas" pelo ChatGPT nunca aconteceram de fato no código, e outros problemas nunca foram detectados. As notas antigas continuam no histórico abaixo só como registro — não valem mais como avaliação vigente.
+
+### Pendências reais das Partes 1–4 (não é uma nova nota, é um checklist de correção)
+
+- [x] `PagamentoService` importava `PagamentoController` (acoplamento inverso, quebra `Controller → Service → Repository`) — **corrigido**
+- [ ] `orElseThrow` usando `IllegalArgumentException` genérica em vez de exceção customizada (`PagamentoNotFoundException`)
+- [ ] Sem `@RestControllerAdvice` para tratamento global de erros
+- [ ] Rotas incorretas: `@RequestMapping("pagamentos")` na classe + `/pagamento/{id}` e `/pagamentos` nos métodos geram `GET /pagamentos/pagamento/{id}` e `GET /pagamentos/pagamentos`
+- [ ] `PagamentoRepository extends JpaRepository<PagamentoJoined, Long>`, mas o campo `@Id` de `PagamentoJoined` é `Integer` — tipo do ID incompatível
+- [ ] `PagamentoEnum` importado em 4 arquivos e nunca usado
+- [ ] `model/teste/primary_key_join_column/*` — código de experimento (`CommandLineRunner` que insere um cartão de teste a cada boot) esquecido dentro de `src/main`, deveria ser removido ou movido pra fora do código de produção
+
+### Decisão de escopo
+
+Daqui pra frente, o projeto segue usando **só `SINGLE_TABLE`** (`model/single_table`). `JOINED` foi implementado e avaliado (Partes 1–3), mas é pouco usado em produção na prática — fica mantido no código como histórico/aprendizado, sem exclusão, mas não é mais a linha ativa de desenvolvimento.
+
+### Prazo
+
+Prazo apertado — o objetivo é fechar as Partes 5–8 (Factory, Strategy, Fluxo Completo, Validação) em **poucos dias**, para liberar tempo pro próximo desafio (Redis, microsserviços, mensageria, circuit breaker, API Gateway).
+
+### Docker & Kubernetes
+
+Diogo tem uma entrevista técnica se aproximando que cobra Docker e Kubernetes. Esses temas vão sendo incorporados progressivamente aos exercícios daqui pra frente (não é um módulo separado — entra quando a API tiver algo real pra containerizar, a partir da Parte 7/8).
+
+### Como as próximas partes vão funcionar
+
+Claude aponta os requisitos de cada parte (igual já era feito) — a solução é sempre escrita por Diogo. Diferença em relação à revisão anterior: toda correção "resolvida" é conferida no código antes de ser dada como fechada, não só aceita pela explicação em texto.
+
+---
+
 ## 🎯 Objetivo
 
 Construir uma API REST que demonstre domínio de:

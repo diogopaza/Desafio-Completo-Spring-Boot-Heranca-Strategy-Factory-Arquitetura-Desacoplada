@@ -2,7 +2,6 @@ package com.herenca.spring.heranca_spring.model.joined;
 
 
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
-import com.herenca.spring.heranca_spring.enums.PagamentoEnum;
 import jakarta.persistence.*;
 
 @Entity

@@ -1,3 +1,19 @@
+@README.md
+
+<!-- As instruções do projeto vêm do README.md acima (fonte única de verdade, sincronizado com GitHub).
+     Atualize apenas o README.md — o CLAUDE.md nunca precisa ser tocado. -->
+
+## Notas para o Claude Code
+
+- Partes 1–4 já foram implementadas e avaliadas
+- Partes 5–8 (Factory, Strategy, Fluxo Completo, Validação) estão pendentes
+- Regras rígidas do desafio: **sem** `if`, `instanceof` ou `switch` baseados em tipo de pagamento
+- Arquitetura esperada: `Controller → Service → Repository` (Service não conhece Controller)
+- Preferir exceções customizadas (`PagamentoNotFoundException`) em vez de `IllegalArgumentException`
+- DTO como boundary: nunca expor entidade diretamente na resposta
+
+---
+<!-- conteúdo legado removido — mantido apenas para referência histórica no git -->
 🧪 Desafio Completo — Spring Boot (HERANÇA + JOINED + STRATEGY + FACTORY)
 🎯 Objetivo
 Construir uma API REST que demonstre domínio de:
