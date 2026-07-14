@@ -931,6 +931,39 @@ Parte 4	9.6 🚀
 
 “Controller deve apenas orquestrar a requisição, enquanto o Service centraliza a regra de negócio, garantindo baixo acoplamento e maior testabilidade.”
 
+---
+
+# 🧠 Respostas — PARTE 5 — FACTORY PATTERN (revisão com Claude)
+
+## ❓ Perguntas
+
+**1. Qual problema a Factory resolve?**
+
+R: Centraliza a criação dos pagamentos e, no nosso caso, ajuda muito no princípio O do SOLID (Open/Closed), porque teríamos muitas alterações no Service para definir se é um número de cartão, uma chave PIX ou número de boleto. Dessa forma fica fácil fazer alterações no código — é necessário apenas adicionar um novo `put` no Map de pagamento na Factory, mantendo o princípio SOLID: aberto para extensões e fechado para mudanças.
+
+**2. O que acontece se você não usar Factory nesse cenário?**
+
+R: Sem Factory seria necessário o uso de vários `if`/`else` para criar os pagamentos e também para selecionar se usa número de cartão, número de boleto ou chave PIX. Quando fossem adicionados novos meios de pagamento, seria necessário alterar várias classes, como o Service — ferindo o princípio Open/Closed do SOLID.
+
+**3. Como adicionar um novo tipo sem alterar código existente?**
+
+R: Nova classe concreta + uma linha no construtor da Factory. Dessa forma, quem chama o método `create()` (no nosso caso, o Service) não precisa sofrer alteração nenhuma quando um novo meio de pagamento é adicionado.
+
+## 🎯 Avaliação — PARTE 5
+
+| Item | Nota (0–10) |
+|---|---|
+| Pergunta 1 (problema que a Factory resolve) | 9,5 |
+| Pergunta 2 (cenário sem Factory) | 8,5 |
+| Pergunta 3 (extensão sem alterar código) | 9,0 |
+| **Média das perguntas** | **~9,0** |
+
+**Código (`PagamentoFactory`):** `Map<String, Function<PagamentoRequestDTO, PagamentoSingleTable>>` montado uma vez no construtor, dispatch por chave (sem `if`/`instanceof` por tipo), cada lambda resolve seu próprio campo específico (chave PIX, número do cartão, número do boleto) sem precisar perguntar "que tipo é esse objeto?" em nenhum outro ponto do código. `Supplier` antigo (sem dados) removido — não havia caso de uso real pra manter as duas versões.
+
+**Nota do código: 9/10** — implementação correta do padrão, sem violação das regras do desafio (nenhum `new` fora da Factory, nenhuma lógica de criação espalhada).
+
+**Nota geral da Parte 5: 9/10.**
+
 
 
 
