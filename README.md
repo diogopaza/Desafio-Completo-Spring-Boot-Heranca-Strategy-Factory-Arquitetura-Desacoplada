@@ -964,6 +964,43 @@ R: Nova classe concreta + uma linha no construtor da Factory. Dessa forma, quem 
 
 **Nota geral da Parte 5: 9/10.**
 
+---
+
+# 🔍 PARTE EXTRA — QUALIDADE DE CÓDIGO COM SONARCLOUD
+
+Cobrado numa entrevista real (2026-07-17) — a vaga pede "Testes automatizados e garantia da qualidade de software" e "vivência com DevOps e ferramentas de CI/CD". Usa "Parte Extra" em vez de número sequencial de propósito, pra não colidir com a numeração contínua usada entre este repositório, o de microsserviços e o de GenAI.
+
+## 🎯 Objetivo
+
+Instrumentar o projeto com análise estática de qualidade — bugs prováveis, vulnerabilidades, code smells, duplicação, cobertura de testes — de forma objetiva e automatizada, não por inspeção manual.
+
+## 🧪 Desafio
+
+* Criar conta gratuita no [SonarCloud](https://sonarcloud.io) (grátis pra repositório público), linkando com a conta GitHub
+* Importar este repositório
+* Adicionar o `sonar-maven-plugin` (ou usar o Automatic Analysis do próprio SonarCloud, mais simples de começar)
+* Configurar um workflow de GitHub Actions que roda `mvn verify sonar:sonar` a cada push/PR — essa é a parte de CI/CD de verdade
+* Resolver pelo menos os achados críticos/altos que o Sonar apontar
+* Adicionar o badge do Quality Gate no topo deste README
+
+## 🚨 Regras
+
+* Não vale só rodar uma vez local e ignorar — precisa estar no pipeline de CI, rodando a cada push
+* Pelo menos 3 findings reais do Sonar corrigidos, documentados aqui (antes/depois, com link do commit)
+
+## ❓ Perguntas
+
+1. Qual a diferença entre um "Bug", uma "Vulnerability" e um "Code Smell" no vocabulário do Sonar?
+2. O que é o Quality Gate, e o que deveria acontecer no pipeline de CI/CD se ele falhar?
+3. Por que cobertura de testes (Coverage) é uma métrica de qualidade — e por que 100% de cobertura não significa "sem bugs"?
+4. Dos findings que o Sonar apontou no seu código, teve algum que te surpreendeu — algo que você não considerava problema antes de ver o relatório?
+
+## 🎯 Avaliação (0 a 10)
+
+* SonarCloud configurado e rodando de verdade no CI (GitHub Actions)
+* Pelo menos 3 findings reais corrigidos, com evidência
+* Entendimento dos conceitos (Quality Gate, Bug vs Vulnerability vs Code Smell, por que Coverage não é a métrica única)
+
 
 
 
