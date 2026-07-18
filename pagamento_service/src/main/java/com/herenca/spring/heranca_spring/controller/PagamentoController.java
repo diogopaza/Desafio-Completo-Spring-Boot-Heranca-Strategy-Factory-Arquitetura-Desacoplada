@@ -8,6 +8,7 @@ import com.herenca.spring.heranca_spring.service.PagamentoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -44,6 +45,14 @@ public class PagamentoController {
     public PagamentoDTO criarPagamento(@RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
         return pagamentoService.criarPagamento(pagamentoRequestDTO);
     }
+
+    @GetMapping("/calcularMulta")
+    public BigDecimal calcularMulta(@RequestParam BigDecimal valorPagamento,
+                                        @RequestParam BigDecimal valorMulta,
+                                        @RequestParam String tipoMulta) {
+        return pagamentoService.calcularValorComMulta(valorPagamento, valorMulta, tipoMulta);
+    }
+
 
 
 }

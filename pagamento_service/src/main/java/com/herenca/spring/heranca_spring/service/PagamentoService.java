@@ -4,23 +4,32 @@ package com.herenca.spring.heranca_spring.service;
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import com.herenca.spring.heranca_spring.dto.PagamentoRequestDTO;
 import com.herenca.spring.heranca_spring.factory.PagamentoFactory;
+import com.herenca.spring.heranca_spring.model.single_table.MultaAtrasoStrategy;
+import com.herenca.spring.heranca_spring.model.single_table.MultaFixa;
 import com.herenca.spring.heranca_spring.model.single_table.PagamentoSingleTable;
 import com.herenca.spring.heranca_spring.repository.PagamentoRepository;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 @Service
 public class PagamentoService {
 
     private PagamentoRepository pagamentoRepository;
     private final NotificacaoPagamentoService notificacaoPagamentoService;
+    private final Map<String, MultaAtrasoStrategy> multaAtrasoStrategy;
 
-
-    public PagamentoService(PagamentoRepository pagamentoRepository, NotificacaoPagamentoService notificacaoPagamentoService) {
+    public PagamentoService(PagamentoRepository pagamentoRepository,
+                            NotificacaoPagamentoService notificacaoPagamentoService,
+                            Map<String, MultaAtrasoStrategy> multaAtrasoStrategy) {
         this.pagamentoRepository = pagamentoRepository;
         this.notificacaoPagamentoService = notificacaoPagamentoService;
+        this.multaAtrasoStrategy = multaAtrasoStrategy;
     }
 
     public PagamentoDTO buscaPagamentoPorId(Integer id)  {
@@ -52,4 +61,10 @@ public class PagamentoService {
     }
 
 
+    public BigDecimal calcularValorComMulta(BigDecimal valorPagamento, BigDecimal valormulta, String tipoMulta) {
+            System.out.println("Calculando multa:: " + valorPagamento + " - " + valormulta + " - " + tipoMulta);
+            MultaAtrasoStrategy multa = Optional.ofNullable(multaAtrasoStrategy.get(tipoMulta.toUpperCase()))
+                    .orElseThrow( () -> new IllegalArgumentException("Tipo de multa não encontrada!!!"));
+            return multa.calcularMulta(valorPagamento, valormulta);
+    }
 }
