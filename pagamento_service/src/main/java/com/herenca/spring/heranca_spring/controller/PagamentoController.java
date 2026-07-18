@@ -1,10 +1,14 @@
 package com.herenca.spring.heranca_spring.controller;
 
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
+import com.herenca.spring.heranca_spring.dto.PagamentoRequestDTO;
+import com.herenca.spring.heranca_spring.factory.PagamentoFactory;
+import com.herenca.spring.heranca_spring.model.single_table.PagamentoSingleTable;
 import com.herenca.spring.heranca_spring.service.PagamentoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -34,6 +38,11 @@ public class PagamentoController {
             return ResponseEntity.ok().body(pagamentoService.listarTodosPagamentosPorTipo(tipo));
         }
         return ResponseEntity.badRequest().body("Defina um tipo de pagamento");
+    }
+
+    @PostMapping
+    public PagamentoDTO criarPagamento(@RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
+        return pagamentoService.criarPagamento(pagamentoRequestDTO);
     }
 
 

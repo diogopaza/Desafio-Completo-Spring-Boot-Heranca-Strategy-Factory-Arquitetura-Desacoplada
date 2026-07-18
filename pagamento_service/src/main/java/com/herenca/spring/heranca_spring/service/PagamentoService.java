@@ -2,8 +2,11 @@ package com.herenca.spring.heranca_spring.service;
 
 
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
+import com.herenca.spring.heranca_spring.dto.PagamentoRequestDTO;
+import com.herenca.spring.heranca_spring.factory.PagamentoFactory;
 import com.herenca.spring.heranca_spring.model.single_table.PagamentoSingleTable;
 import com.herenca.spring.heranca_spring.repository.PagamentoRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,9 +15,12 @@ import java.util.List;
 public class PagamentoService {
 
     private PagamentoRepository pagamentoRepository;
+    private final NotificacaoPagamentoService notificacaoPagamentoService;
 
-    public PagamentoService(PagamentoRepository pagamentoRepository) {
+
+    public PagamentoService(PagamentoRepository pagamentoRepository, NotificacaoPagamentoService notificacaoPagamentoService) {
         this.pagamentoRepository = pagamentoRepository;
+        this.notificacaoPagamentoService = notificacaoPagamentoService;
     }
 
     public PagamentoDTO buscaPagamentoPorId(Integer id)  {
@@ -31,6 +37,19 @@ public class PagamentoService {
     }
 
     public List<PagamentoDTO> listarTodosPagamentosPorTipo(String tipo) {
-        return pagamentoRepository.listarTodosPagamentosPorTipo(tipo);
+        var lista = pagamentoRepository.listarTodosPagamentosPorTipo(tipo);
+
+        return lista.stream()
+                .map(PagamentoSingleTable::toDTO)
+                .toList();
     }
+
+    public PagamentoDTO criarPagamento(PagamentoRequestDTO pagamentoRequestDTO) {
+        PagamentoSingleTable pagamento = new PagamentoFactory().create(pagamentoRequestDTO);
+        pagamentoRepository.save(pagamento);
+        notificacaoPagamentoService.notificarCriacaoPagamento(pagamento);
+        return pagamento.toDTO();
+    }
+
+
 }

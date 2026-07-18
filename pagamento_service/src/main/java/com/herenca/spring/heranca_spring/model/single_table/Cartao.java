@@ -1,37 +1,41 @@
 package com.herenca.spring.heranca_spring.model.single_table;
 
+
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
-@Entity
-@DiscriminatorValue("Boleto")
-public class Boleto extends PagamentoSingleTable {
 
-    private String numeroBoleto;
+@Entity
+@DiscriminatorValue("Cartao")
+public class Cartao extends PagamentoSingleTable {
+
+    private String numeroCartao;
 
     @Override
     public String processaPagamento() {
-        return "Pagando no boleto";
+        return "Pagando no cartao";
     }
+
+
 
     @Override
     public PagamentoDTO toDTO() {
         return new PagamentoDTO(
-            "Boleto",
-            getValor(),
+                "Cartao",
+                getValor(),
                 getData(),
-                getNumeroBoleto(),
                 null,
+                getNumeroCartao(),
                 null
         );
     }
 
-    public String getNumeroBoleto() {
-        return numeroBoleto;
+    public String getNumeroCartao() {
+        return numeroCartao;
     }
 
-    public void setNumeroBoleto(String numeroBoleto) {
-        this.numeroBoleto = numeroBoleto;
+    public void setNumeroCartao(String numeroCartao) {
+        this.numeroCartao = numeroCartao;
     }
 }
