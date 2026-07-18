@@ -966,6 +966,41 @@ R: Nova classe concreta + uma linha no construtor da Factory. Dessa forma, quem 
 
 ---
 
+# 🧠 Respostas — PARTE 6 — STRATEGY PATTERN (revisão com Claude)
+
+## ❓ Perguntas
+
+**1. Qual problema o Strategy resolve?**
+
+R: O Strategy permite usar comportamentos diferentes (objetos diferentes que implementam a mesma interface) sem precisar de `if`/`else` — o Context delega a execução pra strategy escolhida, sem precisar conhecer a implementação concreta.
+
+**2. Qual a diferença entre Strategy e herança?**
+
+R: Herança define uma classe fixa desde o momento da criação do objeto — o tipo não muda depois de instanciado. Strategy é um objeto que tem o comportamento **injetado**, e esse comportamento pode ser trocado sem precisar mudar a classe do objeto que o utiliza.
+
+**3. Quando usar Strategy ao invés de if/switch?**
+
+R: Strategy vale a pena porque implementa o princípio Open/Closed do SOLID — quando a lista de opções tende a crescer com o tempo, não é necessário alterar código existente para adicionar uma nova opção. Por exemplo, no projeto: uma nova classe que implemente `MultaAtrasoStrategy` só precisa ser anotada com `@Component`, e já pode ser usada sem alterar nada em outro lugar do código.
+
+## 🎯 Avaliação — PARTE 6
+
+| Item | Nota (0–10) |
+|---|---|
+| Pergunta 1 (problema que o Strategy resolve) | 8,0 |
+| Pergunta 2 (Strategy vs herança) | 9,0 |
+| Pergunta 3 (Strategy vs if/switch) | 9,0 |
+| **Média das perguntas** | **~8,7** |
+
+**Código (`MultaAtrasoStrategy`, `MultaFixa`, `MultaPercentual`, `PagamentoService.calcularValorComMulta`):** implementações `@Component`, sem construtor, sem campo — totalmente stateless, seguras como singleton. Dispatch via `Map<String, MultaAtrasoStrategy>` injetado no construtor do Service, com normalização de case (`.toUpperCase()`) e `Optional.ofNullable(...).orElseThrow(...)` no lugar de checagem manual de `null`. Nenhum `if`/`instanceof` usado pra decidir qual strategy aplicar — cumpre a regra do desafio.
+
+**Bug encontrado e corrigido durante a revisão:** o método `calcularValorComMulta` chamava `multa.calcularMulta(...)` corretamente, mas descartava o resultado e devolvia um cálculo fixo hardcoded — o resultado real da strategy nunca chegava a quem chamava o método. Corrigido para `return multa.calcularMulta(valorPagamento, valormulta);`.
+
+**Nota do código: 10/10** — design correto desde o início; o único problema era o retorno do método, já corrigido.
+
+**Nota geral da Parte 6: 9/10.**
+
+---
+
 # 🧪 PARTE EXTRA — TESTES AUTOMATIZADOS
 
 Cobrado na mesma entrevista real (2026-07-17) — "Testes automatizados e garantia da qualidade de software" é requisito explícito da vaga, e até agora o projeto não tem nenhum teste. Essa parte vem **antes** da de Sonar de propósito: cobertura só significa alguma coisa depois que existe teste pra medir.
