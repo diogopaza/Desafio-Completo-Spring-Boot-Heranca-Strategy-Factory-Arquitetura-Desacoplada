@@ -286,6 +286,15 @@ Fluxo completo:
 5. Aplicar Strategy
 6. Retornar resposta
 
+### 🎯 O que falta pra fechar isso de verdade (revisão 2026-07-18)
+
+Hoje (`criarPagamento`) os passos 1, 2, 3 e 6 já rodam ponta a ponta, mas **4 e 5 ainda não estão costurados no mesmo fluxo**:
+
+* **Passo 4 (Recuperar objeto)**: depois do `save()`, o método devolve o **mesmo objeto em memória** que acabou de criar — nunca busca de volta no banco (`findById`) pra confirmar que persistiu certo. Devolver o objeto em memória *assume*; buscar de volta *prova*.
+* **Passo 5 (Aplicar Strategy)**: `MultaAtrasoStrategy` já existe e funciona (Parte 6), mas só é chamado por um endpoint separado (`/calcularMulta`) — nunca dentro da criação do pagamento.
+
+**Desafio**: quando um pagamento for criado com data de vencimento já passada (ou outro critério que você definir), `criarPagamento` deve: salvar → buscar de volta no banco (prova de persistência) → aplicar a Strategy de multa automaticamente sobre o valor recuperado → devolver o DTO já com o valor final ajustado. Isso fecha os 6 passos originais numa chamada só, sem o cliente da API precisar chamar `/calcularMulta` à parte.
+
 ---
 
 ## ✅ Resultado esperado:
