@@ -966,9 +966,45 @@ R: Nova classe concreta + uma linha no construtor da Factory. Dessa forma, quem 
 
 ---
 
+# 🧪 PARTE EXTRA — TESTES AUTOMATIZADOS
+
+Cobrado na mesma entrevista real (2026-07-17) — "Testes automatizados e garantia da qualidade de software" é requisito explícito da vaga, e até agora o projeto não tem nenhum teste. Essa parte vem **antes** da de Sonar de propósito: cobertura só significa alguma coisa depois que existe teste pra medir.
+
+## 🎯 Objetivo
+
+Cobrir as camadas principais do projeto com testes reais — unitários (lógica isolada, rápidos, sem subir contexto Spring) e de integração (com banco/contexto real) — não só pra "ter teste", mas pra realmente pegar regressão antes de virar bug em produção.
+
+## 🧪 Desafio
+
+* **Testes unitários** pra `PagamentoFactory` — lógica pura, sem Spring, sem banco. Cobre pelo menos: criação correta de cada tipo (Pix/Cartão/Boleto), e o caso de tipo inválido lançando exception
+* **Testes unitários com Mockito** pra `PagamentoService` — aqui você *mocka* o `PagamentoRepository` (não bate no banco de verdade), testando só a lógica do Service isoladamente
+* **Pelo menos um teste de integração** com `@SpringBootTest` — sobe o contexto Spring de verdade (pode usar um banco H2 em memória ou Testcontainers com Postgres real) e testa o fluxo completo `POST /pagamentos` → salva → responde
+* **Teste do Circuit Breaker**: simula a falha do `notificacao-service` (desliga, ou usa um mock que sempre lança exception) e prova que o fallback é chamado de verdade
+
+## 🚨 Regras
+
+* Teste que só verifica "não estourou exception" não conta — precisa validar o **valor/comportamento esperado**
+* Pelo menos 1 teste tem que provar um caso de **erro** (tipo inválido, circuito aberto), não só o caminho feliz
+
+## ❓ Perguntas
+
+1. Qual a diferença entre teste unitário e teste de integração? Por que o unitário deveria ser muito mais rápido?
+2. Por que usar Mockito pra "mockar" o Repository no teste do Service, em vez de bater no banco de verdade?
+3. O que significa "AAA" (Arrange-Act-Assert) na estrutura de um teste, e seus testes seguem isso?
+4. Como você testou o Circuit Breaker sem precisar esperar o timeout de verdade?
+
+## 🎯 Avaliação (0 a 10)
+
+* Testes unitários da Factory e do Service (com Mockito) funcionando
+* Pelo menos 1 teste de integração real
+* Teste do Circuit Breaker provando o fallback
+* Cobertura de casos de erro, não só caminho feliz
+
+---
+
 # 🔍 PARTE EXTRA — QUALIDADE DE CÓDIGO COM SONARCLOUD
 
-Cobrado numa entrevista real (2026-07-17) — a vaga pede "Testes automatizados e garantia da qualidade de software" e "vivência com DevOps e ferramentas de CI/CD". Usa "Parte Extra" em vez de número sequencial de propósito, pra não colidir com a numeração contínua usada entre este repositório, o de microsserviços e o de GenAI.
+Cobrado numa entrevista real (2026-07-17) — a vaga pede "Testes automatizados e garantia da qualidade de software" e "vivência com DevOps e ferramentas de CI/CD". Usa "Parte Extra" em vez de número sequencial de propósito, pra não colidir com a numeração contínua usada entre este repositório, o de microsserviços e o de GenAI. Depende da parte anterior — sem teste, o Coverage do Sonar fica sempre em 0%.
 
 ## 🎯 Objetivo
 
@@ -1000,6 +1036,42 @@ Instrumentar o projeto com análise estática de qualidade — bugs prováveis, 
 * SonarCloud configurado e rodando de verdade no CI (GitHub Actions)
 * Pelo menos 3 findings reais corrigidos, com evidência
 * Entendimento dos conceitos (Quality Gate, Bug vs Vulnerability vs Code Smell, por que Coverage não é a métrica única)
+
+---
+
+# ⚡ PARTE EXTRA — QUARKUS (comparativo com Spring Boot)
+
+Também cobrado na entrevista real (2026-07-17) — a vaga lista "Quarkus, MicroProfile 3+, Spring 3.x" lado a lado como conhecimento esperado.
+
+## 🎯 Objetivo
+
+Entender Quarkus não só na teoria, mas com uma comparação **medida** contra o que você já domina (Spring Boot) — tempo de startup e consumo de memória são a diferença mais concreta e fácil de provar com número.
+
+## 🧪 Desafio
+
+* Cria um serviço Quarkus mínimo (via [code.quarkus.io](https://code.quarkus.io), parecido com o Spring Initializr), com um único endpoint `GET /health` — igual ao que o `notificacao-service` já tem em Spring Boot
+* Mede o **tempo de startup** dos dois, lado a lado: `pagamento_service`/`notificacao-service` (Spring Boot) vs o novo serviço Quarkus — sobe cada um do zero e cronometra até o primeiro request responder
+* Roda o Quarkus em modo JVM normal primeiro, depois (se quiser ir além) compila em **native image** via GraalVM e mede de novo — a diferença entre os três (Spring Boot, Quarkus/JVM, Quarkus/native) é o dado mais interessante
+* Documenta os números aqui no README (tabela simples: modo, tempo de startup, memória usada)
+
+## 🚨 Regras
+
+* Comparação tem que ser **medida de verdade** (cronômetro, ou `time` no terminal), não estimativa
+* Native image é opcional (exige instalar GraalVM, mais setup) — mas pelo menos a comparação Spring Boot vs Quarkus/JVM é obrigatória
+
+## ❓ Perguntas
+
+1. Por que Quarkus consegue iniciar tão mais rápido que Spring Boot? O que muda entre "resolver na inicialização" (runtime) e "resolver em tempo de build"?
+2. O que é GraalVM native image, e por que ele elimina a JVM em runtime?
+3. Pelos seus números: qual foi a diferença real de tempo de startup entre Spring Boot e Quarkus? Bateu com o que a teoria promete?
+4. Em que cenário essa diferença de startup importa de verdade (pense em Kubernetes escalando pods)?
+
+## 🎯 Avaliação (0 a 10)
+
+* Serviço Quarkus mínimo funcional
+* Comparação de startup medida e documentada com números reais
+* Entendimento de por que Quarkus é mais rápido (build-time vs runtime)
+* Conexão com o cenário real de Kubernetes/escalonamento
 
 
 
