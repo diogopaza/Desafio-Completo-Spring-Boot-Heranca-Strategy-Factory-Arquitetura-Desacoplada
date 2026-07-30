@@ -297,6 +297,38 @@ Hoje (`criarPagamento`) os passos 1, 2, 3 e 6 já rodam ponta a ponta, mas **4 e
 
 ---
 
+### 🔑 Idempotência (adicionado 2026-07-18)
+
+Sistema de pagamento sem proteção contra retry duplicado é bug real de produção — se o cliente reenvia a mesma requisição (timeout de rede, retry automático, clique duplo), hoje `criarPagamento` cria **dois pagamentos** pro mesmo evento. Esse é o padrão real de mercado (Stripe, PayPal) pra resolver isso: **Idempotency Key**.
+
+**Desafio 1 — Idempotency Key no `POST /pagamentos`:**
+* Adiciona um campo `idempotencyKey` em `PagamentoSingleTable`, com constraint **única** no banco
+* `criarPagamento` passa a ler um header `Idempotency-Key` (UUID gerado pelo cliente por tentativa)
+* Antes de criar: verifica se já existe um pagamento com esse key — se existir, **devolve o já criado** (sem inserir de novo); se não existir, cria normalmente salvando o key junto
+* **Teste real obrigatório**: manda a mesma requisição 2x com o mesmo `Idempotency-Key` (via k6, Postman, ou um teste de integração automatizado) — consulta o banco depois e prova que existe **exatamente 1** registro, não 2
+
+**Desafio 2 — idempotência no consumidor (`notificacao-service`):**
+* Mensageria é *at-least-once* (Parte 11B) — a mesma notificação pode chegar duplicada
+* Antes de "processar" uma notificação, verifica se aquele `idPagamento` já foi processado (guarda os IDs processados numa estrutura protegida por `synchronized`, ou — melhor ainda — numa tabela/coluna no banco, já que múltiplas instâncias do serviço não compartilham memória)
+* **Teste real obrigatório**: dispara 2+ threads simultâneas processando o **mesmo** `idPagamento` — prova que só uma processa de verdade, a outra detecta duplicata e ignora
+
+**Regras:**
+* Testes de concorrência/duplicidade precisam ser reais (chamadas de verdade repetidas ou threads concorrentes), não estimativa
+* A proteção de idempotência do `notificacao-service` só funciona de verdade com **múltiplas instâncias** se usar banco (não `synchronized` puro em memória — lembra do porquê: cada instância teria seu próprio lock, sem visibilidade entre elas)
+
+**Perguntas:**
+1. O que é idempotência, em termos simples? Dê um exemplo do dia a dia (fora de programação) que seja idempotente e outro que não seja.
+2. Por que o cliente (não o servidor) gera o Idempotency Key? O que aconteceria se o servidor gerasse?
+3. No teste do `notificacao-service`: por que `synchronized` sozinho não resolve o problema se houver múltiplas instâncias do serviço rodando (lembra do Load Balancer/Competing Consumers)?
+4. HTTP tem verbos que já são idempotentes por definição (`GET`, `PUT`, `DELETE`) e um que não é (`POST`). Por que `POST` não é idempotente por padrão, e por que isso é exatamente o problema que o Idempotency Key resolve?
+
+**Avaliação (0-10):**
+* Idempotency Key funcional no `POST /pagamentos`, com teste real provando não-duplicação
+* Idempotência no consumidor funcional, com teste de concorrência real
+* Entendimento de por que `synchronized` sozinho não basta em múltiplas instâncias
+
+---
+
 ## ✅ Resultado esperado:
 
 * Sistema funcionando ponta a ponta
