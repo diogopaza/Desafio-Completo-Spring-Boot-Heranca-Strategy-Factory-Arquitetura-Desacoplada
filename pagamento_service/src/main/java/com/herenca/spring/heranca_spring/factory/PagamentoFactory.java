@@ -40,7 +40,7 @@ public class PagamentoFactory {
         var pagamento = mapPagamentoSingleTable.get(pagamentoRequestDTO.tipoPagamento().toUpperCase());
         if (pagamento != null) {
             PagamentoSingleTable pagamentoSingleTable = pagamento.apply(pagamentoRequestDTO);
-            pagamentoSingleTable.setData(LocalDate.now());
+            pagamentoSingleTable.setData(pagamentoRequestDTO.dataPagamento());
             pagamentoSingleTable.setValor(pagamentoRequestDTO.valor());
             return pagamentoSingleTable;
 

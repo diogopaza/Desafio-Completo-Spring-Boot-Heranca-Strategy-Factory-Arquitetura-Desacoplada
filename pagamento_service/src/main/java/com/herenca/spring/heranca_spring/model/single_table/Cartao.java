@@ -4,6 +4,7 @@ package com.herenca.spring.heranca_spring.model.single_table;
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import org.springframework.stereotype.Component;
 
 
 @Entity

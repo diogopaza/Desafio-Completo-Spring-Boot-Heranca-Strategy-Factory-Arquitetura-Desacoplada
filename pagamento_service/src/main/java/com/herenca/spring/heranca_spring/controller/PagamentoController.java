@@ -5,6 +5,7 @@ import com.herenca.spring.heranca_spring.dto.PagamentoRequestDTO;
 import com.herenca.spring.heranca_spring.factory.PagamentoFactory;
 import com.herenca.spring.heranca_spring.model.single_table.PagamentoSingleTable;
 import com.herenca.spring.heranca_spring.service.PagamentoService;
+import com.herenca.spring.heranca_spring.service.PatternIdentityTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +19,11 @@ public class PagamentoController {
 
     private PagamentoService pagamentoService;
 
-    public PagamentoController(PagamentoService pagamentoService) {
+    private PatternIdentityTest patternIdentityTest;
+
+    public PagamentoController(PagamentoService pagamentoService, PatternIdentityTest patternIdentityTest) {
         this.pagamentoService = pagamentoService;
+        this.patternIdentityTest = patternIdentityTest;
     }
 
     @GetMapping("/{id}")
@@ -51,6 +55,12 @@ public class PagamentoController {
                                         @RequestParam BigDecimal valorMulta,
                                         @RequestParam String tipoMulta) {
         return pagamentoService.calcularValorComMulta(valorPagamento, valorMulta, tipoMulta);
+    }
+
+    @GetMapping("/testarStrategy")
+    public void testStrategyAndFactory() {
+        patternIdentityTest.strategyDeveSerAMesmaInstancia();
+        patternIdentityTest.factoryDeveCriarInstanciasDiferentes();
     }
 
 

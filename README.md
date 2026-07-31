@@ -1042,6 +1042,47 @@ R: Strategy vale a pena porque implementa o princípio Open/Closed do SOLID — 
 
 ---
 
+# 🧠 Respostas — PARTE 7 — FLUXO COMPLETO (SOLID aplicado, revisão com Claude)
+
+## ❓ Perguntas
+
+**1. Onde estão aplicados os princípios SOLID?**
+
+R: **S (SRP)** — cada classe tem um motivo pra mudar: `PagamentoController` só recebe a requisição HTTP, `PagamentoService` orquestra a regra de negócio, `PagamentoRepository` cuida só de persistência, cada `MultaXxx` faz só o cálculo dela. **O (OCP)** — aplicado de verdade via Strategy: `MultaAtrasoStrategy` + `@Component` permite adicionar um novo tipo de multa sem tocar em nenhuma classe existente, porque o Spring injeta automaticamente no `Map<String, MultaAtrasoStrategy>`. Já a `PagamentoFactory` **não** cumpre OCP da mesma forma — adicionar um tipo de pagamento novo exige editar o construtor dela (`.put(...)`), então ali é uma Factory funcional, mas não um exemplo limpo de Open/Closed. **D (DIP)** — `PagamentoService` depende da abstração `MultaAtrasoStrategy` (interface), nunca das implementações concretas diretamente; isso é o que permite o Spring injetar o Map sem o Service saber quantas/quais estratégias existem.
+
+**2. O sistema está aberto para extensão?**
+
+R: Sim, mas **por camada**, não como propriedade única do sistema inteiro. A camada de Strategy (multa) e a hierarquia de entidade (`Pix`/`Cartão`/`Boleto extends PagamentoSingleTable`) são genuinamente abertas — dá pra criar uma classe nova sem alterar nenhuma das existentes. Já a camada de wiring (`PagamentoFactory`) não é — o registro do tipo novo ainda depende de editar uma classe já existente.
+
+**3. O que aconteceria ao adicionar um novo tipo de pagamento?**
+
+R: É necessário: criar uma nova classe concreta (`@Entity`, **não** `@Component` — porque é dado por registro, não comportamento sem estado) com `@DiscriminatorValue` própria, estendendo `PagamentoSingleTable`; implementar os métodos abstratos `processaPagamento()` e `toDTO()`; adicionar seus campos específicos; registrar o tipo no construtor da `PagamentoFactory`; e, se precisar de um dado novo vindo do cliente, adicionar um campo no `PagamentoRequestDTO`. Não é necessário alterar `Pix`/`Cartão`/`Boleto`, `PagamentoService`, `PagamentoController`, `PagamentoRepository`, as multas, nem criar migration nova (é `SINGLE_TABLE` — mesma tabela, novo valor na coluna `type`).
+
+**Extra 1. O uso do `Map<String, MultaAtrasoStrategy>` (em vez de `if`/`instanceof`) respeita qual princípio?**
+
+R: Open/Closed — não é necessário alterar nenhuma classe existente pra adicionar uma multa nova, só criar a nova implementação anotada com `@Component`.
+
+**Extra 2. A chave da multa hardcoded (`"percentual"`, linha 64 de `PagamentoService`) viola algum princípio?**
+
+R: Não viola o Open/Closed — o mecanismo de extensão (`Map`/`@Component`) já existe e não precisa de nenhum `if` novo pra funcionar; o problema era simplesmente não estar usando a flexibilidade que já existia. A correção é passar o tipo de multa como dado (viria de um novo campo em `PagamentoRequestDTO`, do jeito que `calcularValorComMulta` já recebe `tipoMulta` como parâmetro).
+
+## 🎯 Avaliação — PARTE 7
+
+| Item | Nota (0–10) |
+|---|---|
+| Pergunta 1 (onde estão os princípios SOLID) | 9,5 |
+| Pergunta 2 (sistema aberto para extensão) | 9,5 |
+| Pergunta 3 (o que muda com novo tipo de pagamento) | 8,0 |
+| Extra 1 (Map de multa = qual princípio) | 10,0 |
+| Extra 2 (multa hardcoded = viola o quê) | 9,5 |
+| **Média das perguntas** | **~9,3** |
+
+**Observações da revisão:** duas autocorreções valiosas ao longo da discussão — (1) a `PagamentoFactory` foi inicialmente apontada como exemplo de OCP, mas o próprio Diogo identificou que ela exige modificação do construtor pra cada tipo novo, então não é OCP limpo (o exemplo real é a Strategy da multa); (2) o hardcode da chave de multa foi inicialmente atribuído a uma violação do O, mas a conclusão correta foi que não há violação — o mecanismo já existe, só não estava sendo usado.
+
+**Nota geral da Parte 7 (teoria): 9,3/10.**
+
+---
+
 # 🧪 PARTE EXTRA — TESTES AUTOMATIZADOS
 
 Cobrado na mesma entrevista real (2026-07-17) — "Testes automatizados e garantia da qualidade de software" é requisito explícito da vaga, e até agora o projeto não tem nenhum teste. Essa parte vem **antes** da de Sonar de propósito: cobertura só significa alguma coisa depois que existe teste pra medir.

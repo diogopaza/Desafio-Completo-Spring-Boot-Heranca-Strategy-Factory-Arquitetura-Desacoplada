@@ -11,6 +11,7 @@ import com.herenca.spring.heranca_spring.repository.PagamentoRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +33,10 @@ public class PagamentoService {
         this.multaAtrasoStrategy = multaAtrasoStrategy;
     }
 
-    public PagamentoDTO buscaPagamentoPorId(Integer id)  {
-           return pagamentoRepository.findById(id)
-                   .map(PagamentoSingleTable::toDTO)
-                   .orElseThrow(() -> new IllegalArgumentException("Erro ao bucar pagamento por id"));
+    public PagamentoDTO buscaPagamentoPorId(Integer id) {
+        return pagamentoRepository.findById(id)
+                .map(PagamentoSingleTable::toDTO)
+                .orElseThrow(() -> new IllegalArgumentException("Erro ao bucar pagamento por id"));
     }
 
     public List<PagamentoDTO> buscaTodosPagamentos() {
@@ -55,16 +56,29 @@ public class PagamentoService {
 
     public PagamentoDTO criarPagamento(PagamentoRequestDTO pagamentoRequestDTO) {
         PagamentoSingleTable pagamento = new PagamentoFactory().create(pagamentoRequestDTO);
-        pagamentoRepository.save(pagamento);
-        notificacaoPagamentoService.notificarCriacaoPagamento(pagamento);
-        return pagamento.toDTO();
+        var pagamentoSalvo = pagamentoRepository.save(pagamento);
+
+        var pagamentoBuscado = pagamentoRepository.findById(pagamentoSalvo.getId()).orElseThrow( () ->
+                new IllegalArgumentException("Erro ao recuperar pagamento salvo."));
+        if (pagamentoBuscado.getData().isBefore(LocalDate.now())) {
+            var multa = Optional.ofNullable(multaAtrasoStrategy.get("percentual".toUpperCase())).
+                    orElseThrow( () -> new IllegalArgumentException("Tipo de multa invalido"));
+            pagamentoBuscado.setValor(multa.calcularMulta(pagamento.getValor(), new BigDecimal("2")));
+            pagamentoRepository.save(pagamentoBuscado);
+        }
+        notificacaoPagamentoService.notificarCriacaoPagamento(pagamentoBuscado);
+        return pagamentoBuscado.toDTO();
+
     }
 
 
+
+
+
     public BigDecimal calcularValorComMulta(BigDecimal valorPagamento, BigDecimal valormulta, String tipoMulta) {
-            System.out.println("Calculando multa:: " + valorPagamento + " - " + valormulta + " - " + tipoMulta);
-            MultaAtrasoStrategy multa = Optional.ofNullable(multaAtrasoStrategy.get(tipoMulta.toUpperCase()))
-                    .orElseThrow( () -> new IllegalArgumentException("Tipo de multa não encontrada!!!"));
-            return multa.calcularMulta(valorPagamento, valormulta);
+        System.out.println("Calculando multa:: " + valorPagamento + " - " + valormulta + " - " + tipoMulta);
+        MultaAtrasoStrategy multa = Optional.ofNullable(multaAtrasoStrategy.get(tipoMulta.toUpperCase()))
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de multa não encontrada!!!"));
+        return multa.calcularMulta(valorPagamento, valormulta);
     }
 }
