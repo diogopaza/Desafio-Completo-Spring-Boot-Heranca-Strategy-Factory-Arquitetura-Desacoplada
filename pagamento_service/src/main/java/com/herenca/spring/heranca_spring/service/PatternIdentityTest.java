@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class PatternIdentityTest {
@@ -32,8 +33,8 @@ public class PatternIdentityTest {
         PagamentoRequestDTO dados = new PagamentoRequestDTO("PIX", new BigDecimal("100"),
                 null, null, "chave-teste", LocalDate.now());
 
-        PagamentoSingleTable primeiro = new PagamentoFactory().create(dados);
-        PagamentoSingleTable segundo = new PagamentoFactory().create(dados);
+        PagamentoSingleTable primeiro = new PagamentoFactory().create(dados, UUID.randomUUID());
+        PagamentoSingleTable segundo = new PagamentoFactory().create(dados, UUID.randomUUID());
 
         System.out.println("Pagamento 1: " + primeiro);
         System.out.println("Pagamento 2: " + segundo);

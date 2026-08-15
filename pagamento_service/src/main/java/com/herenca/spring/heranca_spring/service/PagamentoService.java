@@ -12,10 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
 
 @Service
@@ -54,8 +51,17 @@ public class PagamentoService {
                 .toList();
     }
 
-    public PagamentoDTO criarPagamento(PagamentoRequestDTO pagamentoRequestDTO) {
-        PagamentoSingleTable pagamento = new PagamentoFactory().create(pagamentoRequestDTO);
+    public PagamentoDTO criarPagamento(PagamentoRequestDTO pagamentoRequestDTO, UUID idempotencyKey) {
+        PagamentoSingleTable pagamento = new PagamentoFactory().create(pagamentoRequestDTO, idempotencyKey);
+        /*var pagamentoIdempotencyKey = pagamentoRepository.findAll().
+                stream().
+                filter(pagamentoBanco -> pagamentoBanco.getIdempotencyKey().equals(pagamento.getIdempotencyKey())).
+                findFirst();*/
+        var pagamentoIdempotencyKey = pagamentoRepository.findByIdempotencyKey(idempotencyKey);
+        if(pagamentoIdempotencyKey.isPresent()) {
+            return pagamentoIdempotencyKey.get().toDTO();
+        }
+
         var pagamentoSalvo = pagamentoRepository.save(pagamento);
 
         var pagamentoBuscado = pagamentoRepository.findById(pagamentoSalvo.getId()).orElseThrow( () ->

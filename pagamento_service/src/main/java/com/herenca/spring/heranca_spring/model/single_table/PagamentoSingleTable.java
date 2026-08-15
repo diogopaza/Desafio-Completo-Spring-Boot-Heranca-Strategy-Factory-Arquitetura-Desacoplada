@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -29,6 +30,9 @@ public abstract class PagamentoSingleTable {
     private BigDecimal valor;
 
     private LocalDate data;
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private UUID idempotencyKey;
 
     public abstract String processaPagamento();
 
@@ -68,5 +72,13 @@ public abstract class PagamentoSingleTable {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public UUID getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(UUID idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }

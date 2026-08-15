@@ -10,6 +10,7 @@ import com.herenca.spring.heranca_spring.model.single_table.Pix;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 
@@ -36,12 +37,13 @@ public class PagamentoFactory {
         });
     }
 
-    public PagamentoSingleTable create(PagamentoRequestDTO pagamentoRequestDTO) {
+    public PagamentoSingleTable create(PagamentoRequestDTO pagamentoRequestDTO, UUID idempotencyKey) {
         var pagamento = mapPagamentoSingleTable.get(pagamentoRequestDTO.tipoPagamento().toUpperCase());
         if (pagamento != null) {
             PagamentoSingleTable pagamentoSingleTable = pagamento.apply(pagamentoRequestDTO);
             pagamentoSingleTable.setData(pagamentoRequestDTO.dataPagamento());
             pagamentoSingleTable.setValor(pagamentoRequestDTO.valor());
+            pagamentoSingleTable.setIdempotencyKey(idempotencyKey);
             return pagamentoSingleTable;
 
         }

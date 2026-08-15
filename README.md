@@ -1190,7 +1190,74 @@ Entender Quarkus não só na teoria, mas com uma comparação **medida** contra 
 * Entendimento de por que Quarkus é mais rápido (build-time vs runtime)
 * Conexão com o cenário real de Kubernetes/escalonamento
 
+---
 
+# 📌 PARTE EXTRA — ANOTAÇÕES DO DIA A DIA (JPA + Spring)
+
+Seis anotações comuns em entrevista sênior que ainda não apareceram no projeto: `@Enumerated`, `@Transient`, `@Embeddable` (JPA), `@Value`, `@Bean`, `@Qualifier` (Spring). Cada uma encaixa num ponto que já existe no código, sem virar frente nova. A partir daqui, desafios e perguntas são escritos em inglês.
+
+## 🎯 Objetivo
+
+Cover everyday JPA and Spring annotations that show up in real interviews but weren't needed yet in this project — by wiring each one into existing code, not building throwaway examples.
+
+## 🧪 Desafio 1 — `@Enumerated` (in `NotificacaoProcessada`)
+
+* Add a `StatusProcessamento` enum (`PROCESSADO`, `DUPLICADO_IGNORADO`) to the `NotificacaoProcessada` entity from the Idempotência challenge, mapped with `@Enumerated(EnumType.STRING)`
+* Set the status when the dedup check decides to process vs. skip
+* **Required real check**: query the actual database column and confirm it stores the enum **name** (`"PROCESSADO"`), not a number — prove you understand why `EnumType.STRING` is almost always the right choice over `EnumType.ORDINAL`
+
+## 🧪 Desafio 2 — `@Value` (in `PagamentoService`)
+
+* The multa percentage in `criarPagamento` is hardcoded (`new BigDecimal("2")`) — move it to `application.properties` and inject it with `@Value`
+* **Required real test**: change the property value, restart, and prove (via a real request) that the applied multa changes without touching the code
+
+## 🧪 Desafio 3 — `@Bean` vs `@Component` (in `RabbitMQConfig`)
+
+* No new code needed — `RabbitMQConfig` already declares `Queue` and `MessageConverter` beans with `@Bean`
+* Just answer the theory questions below, referencing the actual `@Bean` methods in that file
+
+## 🧪 Desafio 4 — `@Embeddable` (new `Transferencia` payment type)
+
+* Closes the Parte 7 theory question about adding a new payment type — build it for real now
+* Create a `DadosBancarios` value object (`agencia`, `conta`) annotated `@Embeddable`
+* Create `Transferencia extends PagamentoSingleTable`, with a `@Embedded DadosBancarios dadosBancarios` field, `@DiscriminatorValue("Transferencia")`, and the two abstract methods (`processaPagamento()`, `toDTO()`)
+* Register it in `PagamentoFactory`'s constructor, and add the new fields to `PagamentoRequestDTO`
+* **Required real test**: `POST /pagamentos` with `tipoPagamento: "TRANSFERENCIA"`, then `GET` it back and confirm `agencia`/`conta` persisted correctly in the same table (no new table — it's `SINGLE_TABLE`, `@Embeddable` fields just become extra columns)
+
+## 🧪 Desafio 5 — `@Qualifier` (comparison only, no new code)
+
+* You already solved "multiple beans of the same type" with `Map<String, MultaAtrasoStrategy>` injection instead of `@Qualifier`
+* No implementation needed — just answer the theory question comparing the two approaches
+
+## 🧪 Desafio 6 — `@Transient` (in `PagamentoSingleTable`)
+
+* Add a computed field to `PagamentoSingleTable` that is **not** persisted — e.g. `diasParaVencimento` (days until `data`, calculated from `LocalDate.now()`), annotated `@Transient`
+* Expose it in `toDTO()` so it shows up in the API response
+* **Required real check**: after fetching a payment, confirm the column does **not** exist in the database (`\d pagamento_single_table`), even though the field appears in the JSON response
+
+## 🚨 Regras
+
+* No annotation counts as "done" without the real check/test listed above — no theoretical-only answers
+* `@Qualifier` is theory-only by design (already solved differently in this project) — don't force new code just to use it
+
+## ❓ Perguntas
+
+1. `@Enumerated`: Why does `EnumType.ORDINAL` become dangerous the moment someone reorders or inserts a new value in the middle of the enum? Give a concrete example using `StatusProcessamento`.
+2. `@Transient`: What's the difference between a `@Transient` JPA field and Java's own `transient` keyword (serialization)? They look similar but solve different problems.
+3. `@Value`: What's the risk of using `@Value` to inject a business rule (like a multa percentage) directly into a `@Service` class, compared to keeping it in a dedicated `@ConfigurationProperties` class? Does it matter at this project's size?
+4. `@Bean` vs `@Component`: Both register a bean, so why does Spring need two different mechanisms? When can you use `@Component`, and when are you forced to use `@Bean` instead? (Hint: think about `Queue` and `MessageConverter` — could they be `@Component`?)
+5. `@Embeddable`: Why does `Transferencia` embedding `DadosBancarios` still result in **one single table**, with no foreign key and no join — unlike a normal `@OneToOne`/`@ManyToOne` relationship?
+6. `@Qualifier`: You solved payment-type and multa-type dispatch with `Map<String, Bean>` instead of `@Qualifier`. In what situation would `@Qualifier` actually be the better choice over the `Map` pattern? Give a concrete case where injecting a `Map` wouldn't make sense.
+
+## 🎯 Avaliação (0 a 10)
+
+* `StatusProcessamento` enum working, with `EnumType.STRING` confirmed in the database
+* `@Value` multa percentage proven configurable via a real before/after test
+* `Transferencia` fully working end-to-end (`POST` + `GET`) with `@Embeddable` `DadosBancarios`
+* `diasParaVencimento` showing in the API response but absent from the database column list
+* Understanding of `@Bean` vs `@Component`, and of when `@Qualifier` would actually beat the `Map` pattern
+
+---
 
 
 

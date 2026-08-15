@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("pagamentos")
@@ -46,8 +47,9 @@ public class PagamentoController {
     }
 
     @PostMapping
-    public PagamentoDTO criarPagamento(@RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
-        return pagamentoService.criarPagamento(pagamentoRequestDTO);
+    public PagamentoDTO criarPagamento(@RequestHeader("Idempotency-key") UUID idempotencyKey,
+                                       @RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
+        return pagamentoService.criarPagamento(pagamentoRequestDTO, idempotencyKey);
     }
 
     @GetMapping("/calcularMulta")
