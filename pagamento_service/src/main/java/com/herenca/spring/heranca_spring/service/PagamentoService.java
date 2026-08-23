@@ -66,13 +66,17 @@ public class PagamentoService {
 
         var pagamentoBuscado = pagamentoRepository.findById(pagamentoSalvo.getId()).orElseThrow( () ->
                 new IllegalArgumentException("Erro ao recuperar pagamento salvo."));
-        if (pagamentoBuscado.getData().isBefore(LocalDate.now())) {
+        if (!pagamentoBuscado.getData().isBefore(LocalDate.now())) {
             var multa = Optional.ofNullable(multaAtrasoStrategy.get("percentual".toUpperCase())).
                     orElseThrow( () -> new IllegalArgumentException("Tipo de multa invalido"));
             pagamentoBuscado.setValor(multa.calcularMulta(pagamento.getValor(), new BigDecimal("2")));
             pagamentoRepository.save(pagamentoBuscado);
         }
-        notificacaoPagamentoService.notificarCriacaoPagamento(pagamentoBuscado);
+        // Abaixo e o notificacao sincrono e com fallback em caso de falha no endpoint do notificacao
+        //notificacaoPagamentoService.notificarCriacaoPagamento(pagamentoBuscado);
+        //Abaixo notificacao assincrono usado apra testar direto no servico de mensageria
+        notificacaoPagamentoService.notificarCriacaoPagamentoAssincrono(pagamentoBuscado, new IllegalArgumentException(
+                "ERRO AO NOTIFICAR ASSINCRONO"));
         return pagamentoBuscado.toDTO();
 
     }

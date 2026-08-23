@@ -28,7 +28,8 @@ public class Cartao extends PagamentoSingleTable {
                 getData(),
                 null,
                 getNumeroCartao(),
-                null
+                null,
+                getIdempotencyKey()
         );
     }
 

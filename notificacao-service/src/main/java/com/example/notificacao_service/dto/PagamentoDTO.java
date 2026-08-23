@@ -1,4 +1,4 @@
-package com.herenca.spring.heranca_spring.dto;
+package com.example.notificacao_service.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

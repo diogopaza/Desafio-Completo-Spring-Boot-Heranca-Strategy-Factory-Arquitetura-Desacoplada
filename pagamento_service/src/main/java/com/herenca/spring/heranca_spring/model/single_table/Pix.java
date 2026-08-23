@@ -23,7 +23,8 @@ public class Pix extends PagamentoSingleTable {
                 getData(),
                 null,
                 null,
-                getChavePix()
+                getChavePix(),
+                getIdempotencyKey()
         );
     }
 

@@ -25,7 +25,8 @@ public class Boleto extends PagamentoSingleTable {
                 getData(),
                 getNumeroBoleto(),
                 null,
-                null
+                null,
+                getIdempotencyKey()
         );
     }
 

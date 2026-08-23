@@ -4,6 +4,8 @@ package com.herenca.spring.heranca_spring.model.joined;
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 
 @Entity
 @Table(name = "cartao_joined")
@@ -25,7 +27,8 @@ public class CartaoJoined extends PagamentoJoined {
                 this.getData(),
                 null,
                 this.getNumeroCartao(),
-                null
+                null,
+                UUID.randomUUID()
         );
     }
 

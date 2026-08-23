@@ -4,6 +4,8 @@ package com.herenca.spring.heranca_spring.model.joined;
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import jakarta.persistence.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "pix_joined")
 @PrimaryKeyJoinColumn(name = "pagamento_id")
@@ -24,7 +26,8 @@ public class PixJoined extends PagamentoJoined {
                 this.getData(),
                 null,
                 null,
-                this.getChavePix()
+                this.getChavePix(),
+                UUID.randomUUID()
         );
     }
 
