@@ -1083,6 +1083,62 @@ R: Não viola o Open/Closed — o mecanismo de extensão (`Map`/`@Component`) j�
 
 ---
 
+# 🔑 Respostas — IDEMPOTÊNCIA (Desafio 1 + Desafio 2, revisão com Claude)
+
+## ❓ Perguntas
+
+**1. O que é idempotência, em termos simples? Dê um exemplo do dia a dia (fora de programação) que seja idempotente e outro que não seja.**
+
+R: Idempotência é uma operação que pode ser feita várias vezes sem alterar o resultado final. Exemplo idempotente: apertar o botão do elevador uma ou dez vezes só chama ele uma vez. Exemplo não-idempotente: colocar sal na comida — cada vez que você coloca, fica mais salgada, o resultado muda a cada repetição. É isso que queremos num pagamento: não importa quantas vezes a requisição chegar, o resultado final tem que ser um único pagamento.
+
+**2. Por que o cliente (não o servidor) gera o Idempotency Key? O que aconteceria se o servidor gerasse?**
+
+R: O servidor salva a chave no banco e vai consultando; o front pode não receber a resposta (rede falhou na volta, por exemplo) e ficar reenviando a mesma ação. Se a chave fosse gerada pelo servidor, o cliente nunca teria recebido ela na primeira tentativa perdida — não teria o que reenviar, e o servidor veria a segunda tentativa como uma requisição nova, sem ligação com a primeira. Só o cliente tem a continuidade de "eu já tentei isso antes" entre as tentativas.
+
+**3. No teste do `notificacao-service`: por que `synchronized` sozinho não resolve o problema se houver múltiplas instâncias do serviço rodando?**
+
+R: `synchronized` é aplicado por instância/JVM, não entre múltiplas instâncias — cada JVM tem seu próprio monitor/lock, sem visibilidade entre elas. Múltiplas instâncias do `notificacao-service` continuam vulneráveis à mesma duplicidade entre si, mesmo com `synchronized` dentro de cada uma.
+
+**4. HTTP tem verbos que já são idempotentes por definição (`GET`, `PUT`, `DELETE`) e um que não é (`POST`). Por que `POST` não é idempotente por padrão, e por que isso é exatamente o problema que o Idempotency Key resolve?**
+
+R: `POST` cria um recurso novo a cada chamada — repetir aumenta o resultado (dois pagamentos em vez de um). `GET` só busca, nunca modifica nada. `DELETE` e `PUT` sempre convergem pro mesmo estado final, não importa quantas vezes rodem. A Idempotency Key existe pra impor artificialmente ao `POST` a mesma propriedade que os outros verbos já têm de graça — fazendo repetir o mesmo `POST` (com a mesma chave) devolver o resultado já existente em vez de criar de novo.
+
+## 🎯 Avaliação — Perguntas Teóricas
+
+| Item | Nota (0–10) |
+|---|---|
+| Pergunta 1 (o que é idempotência) | 10,0 |
+| Pergunta 2 (por que o cliente gera a chave) | 9,5 |
+| Pergunta 3 (`synchronized` x múltiplas instâncias) | 10,0 |
+| Pergunta 4 (por que `POST` não é idempotente) | 8,0 |
+| **Média das perguntas** | **~9,4** |
+
+## 🧪 Desafio 1 — Idempotency Key no `POST /pagamentos`
+
+Implementado em `PagamentoService.criarPagamento`: lê `idempotencyKey` (extraído do header `Idempotency-Key` no Controller), consulta `findByIdempotencyKey` antes de criar, devolve o pagamento existente se já houver. Testado manualmente via Postman — mesmo header em 2 requisições, confirmado 1 único registro no banco.
+
+**Bugs encontrados e corrigidos durante a revisão:** checagem de `Optional` usando `!= null` em vez de `.isPresent()` (Optional nunca é `null`, o `.get()` estourava `NoSuchElementException`); nome do header no `@RequestHeader` sem hífen (`idempotencyKey` em vez de `Idempotency-Key`); busca via `findAll().stream().filter(...)` trocada por `findByIdempotencyKey` direto no repositório (evita carregar a tabela inteira em memória pra achar 1 registro).
+
+**Pendência conhecida, registrada e não penalizada nesta nota:** o `findByIdempotencyKey` + `save` em `criarPagamento` ainda é check-then-act, sem `try/catch` — sob concorrência real (não sequencial), duas requisições simultâneas com a mesma chave ainda podem estourar `DataIntegrityViolationException` sem tratamento. Fica pra uma próxima revisão.
+
+**Nota Desafio 1: 9/10** — funcional, testado, pendência conhecida e explicitamente adiada.
+
+## 🧪 Desafio 2 — Idempotência no consumidor (`notificacao-service`)
+
+Implementado: entidade `PagamentoConsumido` (`idempotencyKey` com `unique = true`), `PagamentoConsumidoRepository`, `PagamentoDTO` local, `JacksonJsonMessageConverter` configurado. `NotificacaoListener.receberNotificacao` tenta `save()` primeiro (não faz `find` prévio) e captura a violação de constraint — deixando o banco arbitrar de forma atômica, sem check-then-act.
+
+**Teste real de concorrência**: `@SpringBootTest` com `ExecutorService` (5 threads) + `CountDownLatch` (trava a thread principal até todas terminarem) + `@BeforeEach` limpando a tabela antes de cada execução. 5 `PagamentoDTO` de teste, 3 compartilhando a mesma `idempotencyKey` (duplicata tripla proposital) e 2 com chaves distintas. Depois do `await()`, `assertEquals(3, pagamentoConsumidoRepository.count())` prova programaticamente que só as 3 chaves distintas persistiram — não 5, não menos que 3.
+
+**Bugs encontrados e corrigidos ao longo da implementação:** `if` sem `return` (duplicata detectada não impedia o processamento de continuar); check-then-act (`find` + `save` separados) trocado por `save` protegido por `try/catch`; exceção lançada manualmente no caso de duplicata (causaria *nack*/reentrega infinita no RabbitMQ) trocada por retorno normal; divergência de pacote entre o `__TypeId__` do produtor e o DTO local (resolvida com DTO próprio, mesmo pacote, sem acoplar os dois serviços via dependência Maven); lambda capturando variável não efetivamente final; `submit()` resolvendo pra `Callable<String>` em vez de `Runnable` (retorno descartado, nada era impresso); exceção checked dentro de `Runnable` sem tratamento; `countDown()` fora do `finally` (risco de travar o `await()` pra sempre se uma thread lançasse exceção).
+
+**Lição aprendida durante o processo (registrada, não é bug de código):** `@SpringBootTest` isola o contexto Spring, mas **não isola o banco de dados** automaticamente — como o `application.properties` apontava pro banco de desenvolvimento real, o `@BeforeEach` com `deleteAll()` apagou dados reais. Fica como prioridade pra próxima etapa: banco de teste separado (perfil `test` + `application-test.properties`) ou Testcontainers.
+
+**Nota Desafio 2: 9,5/10** — mecanismo correto, teste real e automatizado, boa quantidade de bugs reais identificados e corrigidos ao longo do processo.
+
+## 🎯 Nota geral da Idempotência (Desafio 1 + Desafio 2 + teoria): 9,3/10
+
+---
+
 # 🧪 PARTE EXTRA — TESTES AUTOMATIZADOS
 
 Cobrado na mesma entrevista real (2026-07-17) — "Testes automatizados e garantia da qualidade de software" é requisito explícito da vaga, e até agora o projeto não tem nenhum teste. Essa parte vem **antes** da de Sonar de propósito: cobertura só significa alguma coisa depois que existe teste pra medir.

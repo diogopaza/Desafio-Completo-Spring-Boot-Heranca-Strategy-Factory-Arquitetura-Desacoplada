@@ -2,10 +2,12 @@ package com.example.notificacao_service;
 
 import com.example.notificacao_service.config.NotificacaoListener;
 import com.example.notificacao_service.dto.PagamentoDTO;
+import com.example.notificacao_service.repository.PagamentoConsumidoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -19,6 +21,14 @@ class NotificacaoServiceApplicationTests {
 
 	@Autowired
 	private NotificacaoListener notificacaoListener;
+
+	@Autowired
+	private PagamentoConsumidoRepository pagamentoConsumidoRepository;
+
+	@BeforeEach
+	void limparTabela() {
+		pagamentoConsumidoRepository.deleteAll();
+	}
 
 	@Test
 	void deveProcessarApenasUmaVezComMesmoKeyIndempotencia () throws InterruptedException {
@@ -38,12 +48,16 @@ class NotificacaoServiceApplicationTests {
 					notificacaoListener.receberNotificacao(listaPagamentosDTO.get(numeroDaThread));
 				} catch (InterruptedException e) {
 					throw new RuntimeException(e);
+				} finally {
+					countDownLatch.countDown();
 				}
-				countDownLatch.countDown();
 			});
 		}
 		//trava a thread principal ate as outras finalizarem
 		countDownLatch.await();
+		var totalColunas = pagamentoConsumidoRepository.count();
+		assertEquals(3, totalColunas);
+
 	}
 
 	//@Test
