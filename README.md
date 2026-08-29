@@ -355,20 +355,46 @@ Sistema de pagamento sem proteção contra retry duplicado é bug real de produ�
 
 ## 🎯 Objetivo
 
-Hoje o projeto não trata nenhum dado inválido de forma decente — conferido no código, não existe `@Valid`, `@NotNull` nem `@ControllerAdvice` em lugar nenhum. Uma requisição com `valor` negativo, `tipoPagamento` inexistente, ou o header `Idempotency-Key` mal formado simplesmente estoura uma exceção crua, sem resposta clara pro cliente da API.
+Hoje o projeto não trata nenhum dado inválido de forma decente — conferido no código, não existe `@Valid`, `@NotNull` nem `@ControllerAdvice` em lugar nenhum. Uma requisição com `valor` negativo, `tipoPagamento` inexistente, ou o header `Idempotency-Key` mal formado simplesmente estoura uma exceção crua, sem resposta clara pro cliente da API. Além de tratar, os erros vão seguir a **RFC 7807 (Problem Details for HTTP APIs)** — o formato padrão de mercado pra corpo de erro em API REST, que você também vai aplicar no trabalho.
+
+## 📄 RFC 7807 — o que é
+
+Padroniza o **formato** da resposta de erro (não o conteúdo, o formato), pra qualquer cliente saber onde procurar cada informação, não importa qual API REST ele está consumindo. Estrutura padrão:
+
+```json
+{
+  "type": "https://api.exemplo.com/erros/tipo-pagamento-invalido",
+  "title": "Tipo de pagamento inválido",
+  "status": 400,
+  "detail": "O tipo 'CRYPTO' não é suportado. Use PIX, CARTAO ou BOLETO.",
+  "instance": "/pagamentos"
+}
+```
+
+* `type` — URI que identifica a **categoria** do erro (não precisa ser uma URL real/navegável, é só um identificador; se omitido, o padrão é `"about:blank"`)
+* `title` — resumo curto e humano do tipo de erro (fixo pra cada `type`, não muda entre ocorrências)
+* `status` — o mesmo código HTTP da resposta, repetido no corpo (útil pra quem loga só o corpo, sem acesso fácil ao status)
+* `detail` — explicação específica **dessa ocorrência** (pode e deve variar: "CRYPTO" numa vez, "XYZ" noutra)
+* `instance` — identifica a ocorrência específica (aqui, o path da requisição já serve)
+* Content-Type da resposta: `application/problem+json` (não `application/json` puro)
+* Também permite **membros de extensão** — campos extras além dos 5 padrão, ex: uma lista `errors` com erro por campo, quando a validação falha em vários campos ao mesmo tempo
+
+O Spring (desde a versão 6 / Boot 3+, então já disponível aqui) tem suporte nativo via a classe `org.springframework.http.ProblemDetail` — não precisa montar esse JSON na mão.
 
 ## 🧪 Desafio
 
 * Adiciona validação (Bean Validation — `@NotNull`, `@NotBlank`, `@Positive`, etc.) no `PagamentoRequestDTO`, e `@Valid` no `PagamentoController` pra ativar essa validação automaticamente
 * Cria um `@ControllerAdvice` global (ex: `GlobalExceptionHandler`) que capture pelo menos:
-  * `MethodArgumentNotValidException` (falha de `@Valid`)
+  * `MethodArgumentNotValidException` (falha de `@Valid`) — usa o membro de extensão `errors` (lista de campo + mensagem), já que pode ter mais de um campo inválido na mesma requisição
   * `IllegalArgumentException` (já é lançada hoje em vários pontos: tipo de pagamento inválido na `PagamentoFactory`, tipo de multa inválido no `PagamentoService`)
   * `MethodArgumentTypeMismatchException` (o header `Idempotency-Key` chega com um texto que não é UUID válido)
-* Cada uma dessas exceções deve devolver um corpo JSON com mensagem clara e o **status HTTP correto** (erro de dado do cliente = `400`, não `500`)
+* Cada `@ExceptionHandler` devolve um `ProblemDetail` (`ProblemDetail.forStatusAndDetail(HttpStatus status, String detail)`, com `.setTitle(...)` e, se for o caso, `.setProperty("errors", listaDeErros)`) — nunca uma `String`/DTO próprio inventado
+* O **status HTTP correto** em cada caso (erro de dado do cliente = `400`, não `500`)
 
 ## 🚨 Regras
 
-* Não vale só "não estourar exceção" — precisa confirmar corpo de resposta útil **e** status HTTP correto
+* Não vale só "não estourar exceção" — precisa confirmar corpo de resposta no formato RFC 7807 **e** status HTTP correto
+* A resposta real tem que vir com `Content-Type: application/problem+json` — confirma isso no teste, não só o corpo
 * Pelo menos 3 cenários de erro reais testados (não hipotéticos): valor negativo, tipo de pagamento inexistente, header malformado
 
 ## ❓ Perguntas
@@ -376,13 +402,16 @@ Hoje o projeto não trata nenhum dado inválido de forma decente — conferido n
 1. Por que validar na borda da API (`@Valid` no Controller) é melhor do que deixar a exceção estourar lá dentro da Factory/Service?
 2. Qual a diferença entre um erro do cliente (`4xx`) e um erro do servidor (`5xx`) — por que devolver `500` pra um dado inválido que o próprio cliente mandou errado está errado?
 3. O que é um `@ControllerAdvice`, e por que ele resolve isso de forma mais limpa do que cada `Controller` ter seu próprio `try/catch`?
-4. Hoje, sem tratamento nenhum, quando `IllegalArgumentException` é lançada (tipo de pagamento inválido, por exemplo), qual status HTTP o Spring devolve por padrão? Você testou e confirmou, ou está assumindo?
+4. Qual problema real a RFC 7807 resolve — o que mudava (do ponto de vista de quem **consome** a API) antes dela existir, quando cada equipe/empresa inventava seu próprio formato de erro?
+5. Por que `type` pode ser um identificador que não é uma URL navegável de verdade, e por que ele é diferente de `title` (um nunca muda entre ocorrências, o outro pode variar) — dê um exemplo com o seu próprio `IllegalArgumentException` de tipo de pagamento inválido.
+6. Hoje, sem tratamento nenhum, quando `IllegalArgumentException` é lançada (tipo de pagamento inválido, por exemplo), qual status HTTP o Spring devolve por padrão? Você testou e confirmou, ou está assumindo?
 
 ---
 
 ## ✅ Resultado esperado
 
 * API que responde com clareza pra dado inválido, em vez de vazar stack trace
+* Corpo de erro no formato RFC 7807 (`ProblemDetail`), com `Content-Type: application/problem+json`
 * Status HTTP correto em cada cenário de erro
 
 ---
@@ -390,9 +419,9 @@ Hoje o projeto não trata nenhum dado inválido de forma decente — conferido n
 ## 🎯 Avaliação (0 a 10)
 
 * Bean Validation funcionando nos campos principais do `PagamentoRequestDTO`
-* `@ControllerAdvice` tratando pelo menos os 3 tipos de exceção listados, com corpo de resposta consistente
-* Pelo menos 3 cenários de erro testados de verdade (requisição real, resposta real, status HTTP conferido)
-* Entendimento de por que validar na borda é melhor que deixar vazar
+* `@ControllerAdvice` tratando pelo menos os 3 tipos de exceção listados, devolvendo `ProblemDetail` de verdade (não um DTO de erro caseiro)
+* Pelo menos 3 cenários de erro testados de verdade (requisição real, resposta real, status HTTP e `Content-Type` conferidos)
+* Entendimento do que a RFC 7807 resolve e por que padronizar formato de erro importa entre APIs diferentes
 
 ---
 
