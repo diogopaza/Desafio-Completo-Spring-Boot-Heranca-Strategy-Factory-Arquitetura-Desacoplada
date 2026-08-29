@@ -353,31 +353,46 @@ Sistema de pagamento sem proteção contra retry duplicado é bug real de produ�
 
 # 🛑 PARTE 8 — VALIDAÇÃO E ERROS
 
-## Você deve:
+## 🎯 Objetivo
 
-* Validar entradas
-* Tratar erros
+Hoje o projeto não trata nenhum dado inválido de forma decente — conferido no código, não existe `@Valid`, `@NotNull` nem `@ControllerAdvice` em lugar nenhum. Uma requisição com `valor` negativo, `tipoPagamento` inexistente, ou o header `Idempotency-Key` mal formado simplesmente estoura uma exceção crua, sem resposta clara pro cliente da API.
 
----
+## 🧪 Desafio
 
-## ✅ Resultado esperado:
+* Adiciona validação (Bean Validation — `@NotNull`, `@NotBlank`, `@Positive`, etc.) no `PagamentoRequestDTO`, e `@Valid` no `PagamentoController` pra ativar essa validação automaticamente
+* Cria um `@ControllerAdvice` global (ex: `GlobalExceptionHandler`) que capture pelo menos:
+  * `MethodArgumentNotValidException` (falha de `@Valid`)
+  * `IllegalArgumentException` (já é lançada hoje em vários pontos: tipo de pagamento inválido na `PagamentoFactory`, tipo de multa inválido no `PagamentoService`)
+  * `MethodArgumentTypeMismatchException` (o header `Idempotency-Key` chega com um texto que não é UUID válido)
+* Cada uma dessas exceções deve devolver um corpo JSON com mensagem clara e o **status HTTP correto** (erro de dado do cliente = `400`, não `500`)
 
-* API robusta
-* Respostas claras
+## 🚨 Regras
 
----
+* Não vale só "não estourar exceção" — precisa confirmar corpo de resposta útil **e** status HTTP correto
+* Pelo menos 3 cenários de erro reais testados (não hipotéticos): valor negativo, tipo de pagamento inexistente, header malformado
 
 ## ❓ Perguntas
 
-1. Por que validar na entrada é importante?
-2. Qual o impacto de não tratar erros?
+1. Por que validar na borda da API (`@Valid` no Controller) é melhor do que deixar a exceção estourar lá dentro da Factory/Service?
+2. Qual a diferença entre um erro do cliente (`4xx`) e um erro do servidor (`5xx`) — por que devolver `500` pra um dado inválido que o próprio cliente mandou errado está errado?
+3. O que é um `@ControllerAdvice`, e por que ele resolve isso de forma mais limpa do que cada `Controller` ter seu próprio `try/catch`?
+4. Hoje, sem tratamento nenhum, quando `IllegalArgumentException` é lançada (tipo de pagamento inválido, por exemplo), qual status HTTP o Spring devolve por padrão? Você testou e confirmou, ou está assumindo?
+
+---
+
+## ✅ Resultado esperado
+
+* API que responde com clareza pra dado inválido, em vez de vazar stack trace
+* Status HTTP correto em cada cenário de erro
 
 ---
 
 ## 🎯 Avaliação (0 a 10)
 
-* Robustez
-* Qualidade
+* Bean Validation funcionando nos campos principais do `PagamentoRequestDTO`
+* `@ControllerAdvice` tratando pelo menos os 3 tipos de exceção listados, com corpo de resposta consistente
+* Pelo menos 3 cenários de erro testados de verdade (requisição real, resposta real, status HTTP conferido)
+* Entendimento de por que validar na borda é melhor que deixar vazar
 
 ---
 
