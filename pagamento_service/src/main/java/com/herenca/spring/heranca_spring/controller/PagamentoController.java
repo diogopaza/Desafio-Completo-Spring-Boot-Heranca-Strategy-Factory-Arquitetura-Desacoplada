@@ -2,16 +2,14 @@ package com.herenca.spring.heranca_spring.controller;
 
 import com.herenca.spring.heranca_spring.dto.PagamentoDTO;
 import com.herenca.spring.heranca_spring.dto.PagamentoRequestDTO;
-import com.herenca.spring.heranca_spring.factory.PagamentoFactory;
-import com.herenca.spring.heranca_spring.model.single_table.PagamentoSingleTable;
 import com.herenca.spring.heranca_spring.service.PagamentoService;
 import com.herenca.spring.heranca_spring.service.PatternIdentityTest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-
 import java.math.BigDecimal;
-import java.time.LocalDate;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -48,9 +46,14 @@ public class PagamentoController {
     }
 
     @PostMapping
-    public PagamentoDTO criarPagamento(@RequestHeader("Idempotency-key") UUID idempotencyKey,
+    public ResponseEntity<?> criarPagamento(@RequestHeader("Idempotency-key") UUID idempotencyKey,
                                        @Valid @RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
-        return pagamentoService.criarPagamento(pagamentoRequestDTO, idempotencyKey);
+        try {
+            return ResponseEntity.ok().body(pagamentoService.criarPagamento(
+                    pagamentoRequestDTO, idempotencyKey));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
     @GetMapping("/calcularMulta")

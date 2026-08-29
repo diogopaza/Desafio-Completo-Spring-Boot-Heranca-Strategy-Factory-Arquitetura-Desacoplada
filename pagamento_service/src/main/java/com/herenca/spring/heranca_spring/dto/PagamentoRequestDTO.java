@@ -1,16 +1,24 @@
 package com.herenca.spring.heranca_spring.dto;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
-public record PagamentoRequestDTO(@NotNull @NotBlank String tipoPagamento,
-                                  @Positive @NotNull BigDecimal valor, String numeroBoleto,
+public record PagamentoRequestDTO(@NotNull(message = "O campo tipo pagamento não pode ser null.")
+                                  @NotBlank(message = "O campo tipo pagamento não pode ser vazio.")
+                                  String tipoPagamento,
+                                  @DecimalMin(value = "0.01", message = "O valor minímo do " +
+                                          "pagamento e 0.01 centavos")
+                                  @Digits(integer = 10, fraction = 2)
+                                  @NotNull(message = "O campo valor não pode ser null.")
+                                  BigDecimal valor,
+                                  String numeroBoleto,
                                   String numeroCartao,
                                   String chavePix,
-                                  @NotNull LocalDate dataPagamento) {
+                                  @NotNull(message = "O data de pagamento não pode ser null.")
+                                  LocalDate dataPagamento) {
 }
