@@ -6,6 +6,7 @@ import com.herenca.spring.heranca_spring.factory.PagamentoFactory;
 import com.herenca.spring.heranca_spring.model.single_table.PagamentoSingleTable;
 import com.herenca.spring.heranca_spring.service.PagamentoService;
 import com.herenca.spring.heranca_spring.service.PatternIdentityTest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,7 +49,7 @@ public class PagamentoController {
 
     @PostMapping
     public PagamentoDTO criarPagamento(@RequestHeader("Idempotency-key") UUID idempotencyKey,
-                                       @RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
+                                       @Valid @RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
         return pagamentoService.criarPagamento(pagamentoRequestDTO, idempotencyKey);
     }
 
