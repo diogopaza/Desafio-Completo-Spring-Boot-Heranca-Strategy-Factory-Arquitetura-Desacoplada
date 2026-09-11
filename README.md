@@ -1294,7 +1294,7 @@ Entender Quarkus não só na teoria, mas com uma comparação **medida** contra 
 
 # 📌 PARTE EXTRA — ANOTAÇÕES DO DIA A DIA (JPA + Spring)
 
-Seis anotações comuns em entrevista sênior que ainda não apareceram no projeto: `@Enumerated`, `@Transient`, `@Embeddable` (JPA), `@Value`, `@Bean`, `@Qualifier` (Spring). Cada uma encaixa num ponto que já existe no código, sem virar frente nova. A partir daqui, desafios e perguntas são escritos em inglês.
+Sete anotações comuns em entrevista sênior que ainda não apareceram no projeto: `@Enumerated`, `@Transient`, `@Embeddable`, `@EmbeddedId` (JPA), `@Value`, `@Bean`, `@Qualifier` (Spring). Cada uma encaixa num ponto que já existe no código, sem virar frente nova. A partir daqui, desafios e perguntas são escritos em inglês.
 
 ## 🎯 Objetivo
 
@@ -1335,6 +1335,14 @@ Cover everyday JPA and Spring annotations that show up in real interviews but we
 * Expose it in `toDTO()` so it shows up in the API response
 * **Required real check**: after fetching a payment, confirm the column does **not** exist in the database (`\d pagamento_single_table`), even though the field appears in the JSON response
 
+## 🧪 Desafio 7 — `@EmbeddedId` (Composite Primary Key, new `Parcela` entity)
+
+* Real-world motivation for this one: composite primary keys show up constantly in real production systems (Educabiz included) — most often when the natural identity of a row is a **combination** of two things, not a single surrogate id
+* Create a `Parcela` entity representing one installment of a `PagamentoSingleTable` — its natural identity is the combination `(pagamentoId, numeroParcela)`: installment "1" repeats across different payments, but only exists once per specific payment
+* Create an `@Embeddable` class `ParcelaId` holding both fields (`pagamentoId`, `numeroParcela`), with a correctly implemented `equals()`/`hashCode()` (JPA requires this for composite keys to actually work — comparing field-by-field, not object identity)
+* Annotate `Parcela` with `@EmbeddedId private ParcelaId id;`
+* **Required real test**: try inserting two `Parcela` rows with the exact same `(pagamentoId, numeroParcela)` — confirm the database rejects it (primary key violation); then insert `(pagamentoId=1, numeroParcela=1)` and `(pagamentoId=2, numeroParcela=1)` — confirm both coexist fine, proving the key is the **combination**, not either field alone
+
 ## 🚨 Regras
 
 * No annotation counts as "done" without the real check/test listed above — no theoretical-only answers
@@ -1348,6 +1356,7 @@ Cover everyday JPA and Spring annotations that show up in real interviews but we
 4. `@Bean` vs `@Component`: Both register a bean, so why does Spring need two different mechanisms? When can you use `@Component`, and when are you forced to use `@Bean` instead? (Hint: think about `Queue` and `MessageConverter` — could they be `@Component`?)
 5. `@Embeddable`: Why does `Transferencia` embedding `DadosBancarios` still result in **one single table**, with no foreign key and no join — unlike a normal `@OneToOne`/`@ManyToOne` relationship?
 6. `@Qualifier`: You solved payment-type and multa-type dispatch with `Map<String, Bean>` instead of `@Qualifier`. In what situation would `@Qualifier` actually be the better choice over the `Map` pattern? Give a concrete case where injecting a `Map` wouldn't make sense.
+7. `@EmbeddedId`: Why are `equals()`/`hashCode()` on the `@Embeddable` id class mandatory for a composite key to work correctly — what breaks in JPA's persistence context (first-level cache, dirty checking) if you leave them as default `Object` identity? Also: what's the difference between `@EmbeddedId` and `@IdClass` — both solve composite keys, but in different ways — when would you pick one over the other?
 
 ## 🎯 Avaliação (0 a 10)
 
@@ -1355,6 +1364,7 @@ Cover everyday JPA and Spring annotations that show up in real interviews but we
 * `@Value` multa percentage proven configurable via a real before/after test
 * `Transferencia` fully working end-to-end (`POST` + `GET`) with `@Embeddable` `DadosBancarios`
 * `diasParaVencimento` showing in the API response but absent from the database column list
+* `Parcela` with a working `@EmbeddedId`, correct `equals()`/`hashCode()`, and the real test proving the key is the combination of both fields
 * Understanding of `@Bean` vs `@Component`, and of when `@Qualifier` would actually beat the `Map` pattern
 
 ---
