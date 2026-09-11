@@ -46,14 +46,9 @@ public class PagamentoController {
     }
 
     @PostMapping
-    public ResponseEntity<?> criarPagamento(@RequestHeader("Idempotency-key") UUID idempotencyKey,
+    public ResponseEntity<PagamentoDTO> criarPagamento(@RequestHeader("Idempotency-key") UUID idempotencyKey,
                                        @Valid @RequestBody PagamentoRequestDTO pagamentoRequestDTO) {
-        try {
-            return ResponseEntity.ok().body(pagamentoService.criarPagamento(
-                    pagamentoRequestDTO, idempotencyKey));
-        } catch (Exception ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        return ResponseEntity.ok().body(pagamentoService.criarPagamento(pagamentoRequestDTO, idempotencyKey));
     }
 
     @GetMapping("/calcularMulta")
