@@ -1294,78 +1294,89 @@ Entender Quarkus não só na teoria, mas com uma comparação **medida** contra 
 
 # 📌 PARTE EXTRA — ANOTAÇÕES DO DIA A DIA (JPA + Spring)
 
-Sete anotações comuns em entrevista sênior que ainda não apareceram no projeto: `@Enumerated`, `@Transient`, `@Embeddable`, `@EmbeddedId` (JPA), `@Value`, `@Bean`, `@Qualifier` (Spring). Cada uma encaixa num ponto que já existe no código, sem virar frente nova. A partir daqui, desafios e perguntas são escritos em inglês.
+Oito anotações comuns em entrevista sênior que ainda não tinham aparecido no projeto: `@Enumerated`, `@Transient`, `@Embeddable`, `@EmbeddedId`, `@ManyToOne`/`@JoinColumn`/`@JoinColumns` (JPA), `@Value`, `@Bean`, `@Qualifier` (Spring). Cada uma encaixa num ponto que já existe no código, sem virar frente nova.
 
 ## 🎯 Objetivo
 
-Cover everyday JPA and Spring annotations that show up in real interviews but weren't needed yet in this project — by wiring each one into existing code, not building throwaway examples.
+Cobrir anotações de JPA e Spring do dia a dia, que aparecem em entrevista real mas ainda não tinham sido necessárias nesse projeto — encaixando cada uma em código que já existe, sem criar exemplo descartável só pra usar a anotação.
 
-## 🧪 Desafio 1 — `@Enumerated` (in `NotificacaoProcessada`)
+## 🧪 Desafio 1 — `@Enumerated` (em `NotificacaoProcessada`)
 
-* Add a `StatusProcessamento` enum (`PROCESSADO`, `DUPLICADO_IGNORADO`) to the `NotificacaoProcessada` entity from the Idempotência challenge, mapped with `@Enumerated(EnumType.STRING)`
-* Set the status when the dedup check decides to process vs. skip
-* **Required real check**: query the actual database column and confirm it stores the enum **name** (`"PROCESSADO"`), not a number — prove you understand why `EnumType.STRING` is almost always the right choice over `EnumType.ORDINAL`
+* Adiciona um enum `StatusProcessamento` (`PROCESSADO`, `DUPLICADO_IGNORADO`) na entidade `NotificacaoProcessada` do desafio de Idempotência, mapeado com `@Enumerated(EnumType.STRING)`
+* Seta o status quando a checagem de dedup decide processar ou ignorar
+* **Checagem real obrigatória**: consulta a coluna de verdade no banco e confirma que ela guarda o **nome** do enum (`"PROCESSADO"`), não um número — prova que você entende por que `EnumType.STRING` é quase sempre a escolha certa em vez de `EnumType.ORDINAL`
 
-## 🧪 Desafio 2 — `@Value` (in `PagamentoService`)
+## 🧪 Desafio 2 — `@Value` (em `PagamentoService`)
 
-* The multa percentage in `criarPagamento` is hardcoded (`new BigDecimal("2")`) — move it to `application.properties` and inject it with `@Value`
-* **Required real test**: change the property value, restart, and prove (via a real request) that the applied multa changes without touching the code
+* O percentual da multa em `criarPagamento` está hardcoded (`new BigDecimal("2")`) — move pro `application.properties` e injeta com `@Value`
+* **Teste real obrigatório**: muda o valor da property, reinicia, e prova (com uma requisição real) que a multa aplicada muda sem tocar no código
 
-## 🧪 Desafio 3 — `@Bean` vs `@Component` (in `RabbitMQConfig`)
+## 🧪 Desafio 3 — `@Bean` vs `@Component` (em `RabbitMQConfig`)
 
-* No new code needed — `RabbitMQConfig` already declares `Queue` and `MessageConverter` beans with `@Bean`
-* Just answer the theory questions below, referencing the actual `@Bean` methods in that file
+* Não precisa de código novo — `RabbitMQConfig` já declara os beans `Queue` e `MessageConverter` com `@Bean`
+* Só responde as perguntas teóricas abaixo, referenciando os métodos `@Bean` reais desse arquivo
 
-## 🧪 Desafio 4 — `@Embeddable` (new `Transferencia` payment type)
+## 🧪 Desafio 4 — `@Embeddable` (novo tipo de pagamento `Transferencia`)
 
-* Closes the Parte 7 theory question about adding a new payment type — build it for real now
-* Create a `DadosBancarios` value object (`agencia`, `conta`) annotated `@Embeddable`
-* Create `Transferencia extends PagamentoSingleTable`, with a `@Embedded DadosBancarios dadosBancarios` field, `@DiscriminatorValue("Transferencia")`, and the two abstract methods (`processaPagamento()`, `toDTO()`)
-* Register it in `PagamentoFactory`'s constructor, and add the new fields to `PagamentoRequestDTO`
-* **Required real test**: `POST /pagamentos` with `tipoPagamento: "TRANSFERENCIA"`, then `GET` it back and confirm `agencia`/`conta` persisted correctly in the same table (no new table — it's `SINGLE_TABLE`, `@Embeddable` fields just become extra columns)
+* Fecha a pergunta teórica da Parte 7 sobre adicionar um novo tipo de pagamento — constrói de verdade agora
+* Cria um value object `DadosBancarios` (`agencia`, `conta`) anotado `@Embeddable`
+* Cria `Transferencia extends PagamentoSingleTable`, com um campo `@Embedded DadosBancarios dadosBancarios`, `@DiscriminatorValue("Transferencia")`, e os dois métodos abstratos (`processaPagamento()`, `toDTO()`)
+* Registra no construtor da `PagamentoFactory`, e adiciona os campos novos no `PagamentoRequestDTO`
+* **Teste real obrigatório**: `POST /pagamentos` com `tipoPagamento: "TRANSFERENCIA"`, depois `GET` de volta confirmando que `agencia`/`conta` persistiram certo na mesma tabela (sem tabela nova — é `SINGLE_TABLE`, campos `@Embeddable` só viram colunas extras)
 
-## 🧪 Desafio 5 — `@Qualifier` (comparison only, no new code)
+## 🧪 Desafio 5 — `@Qualifier` (só comparação, sem código novo)
 
-* You already solved "multiple beans of the same type" with `Map<String, MultaAtrasoStrategy>` injection instead of `@Qualifier`
-* No implementation needed — just answer the theory question comparing the two approaches
+* Você já resolveu "múltiplos beans do mesmo tipo" com injeção de `Map<String, MultaAtrasoStrategy>` em vez de `@Qualifier`
+* Não precisa implementar nada — só responde a pergunta teórica comparando as duas abordagens
 
-## 🧪 Desafio 6 — `@Transient` (in `PagamentoSingleTable`)
+## 🧪 Desafio 6 — `@Transient` (em `PagamentoSingleTable`)
 
-* Add a computed field to `PagamentoSingleTable` that is **not** persisted — e.g. `diasParaVencimento` (days until `data`, calculated from `LocalDate.now()`), annotated `@Transient`
-* Expose it in `toDTO()` so it shows up in the API response
-* **Required real check**: after fetching a payment, confirm the column does **not** exist in the database (`\d pagamento_single_table`), even though the field appears in the JSON response
+* Adiciona um campo calculado em `PagamentoSingleTable` que **não** é persistido — ex: `diasParaVencimento` (dias até `data`, calculado a partir de `LocalDate.now()`), anotado `@Transient`
+* Expõe ele no `toDTO()` pra aparecer na resposta da API
+* **Checagem real obrigatória**: depois de buscar um pagamento, confirma que a coluna **não** existe no banco (`\d pagamento_single_table`), mesmo o campo aparecendo no JSON da resposta
 
-## 🧪 Desafio 7 — `@EmbeddedId` (Composite Primary Key, new `Parcela` entity)
+## 🧪 Desafio 7 — `@EmbeddedId` (Chave Primária Composta, nova entidade `Parcela`)
 
-* Real-world motivation for this one: composite primary keys show up constantly in real production systems (Educabiz included) — most often when the natural identity of a row is a **combination** of two things, not a single surrogate id
-* Create a `Parcela` entity representing one installment of a `PagamentoSingleTable` — its natural identity is the combination `(pagamentoId, numeroParcela)`: installment "1" repeats across different payments, but only exists once per specific payment
-* Create an `@Embeddable` class `ParcelaId` holding both fields (`pagamentoId`, `numeroParcela`), with a correctly implemented `equals()`/`hashCode()` (JPA requires this for composite keys to actually work — comparing field-by-field, not object identity)
-* Annotate `Parcela` with `@EmbeddedId private ParcelaId id;`
-* **Required real test**: try inserting two `Parcela` rows with the exact same `(pagamentoId, numeroParcela)` — confirm the database rejects it (primary key violation); then insert `(pagamentoId=1, numeroParcela=1)` and `(pagamentoId=2, numeroParcela=1)` — confirm both coexist fine, proving the key is the **combination**, not either field alone
+* Motivação real pra esse: chave primária composta aparece o tempo todo em sistema de produção de verdade (Educabiz incluso) — geralmente quando a identidade natural de uma linha é a **combinação** de duas coisas, não um id substituto sozinho
+* Cria uma entidade `Parcela`, representando uma parcela de um `PagamentoSingleTable` — a identidade natural dela é a combinação `(pagamentoId, numeroParcela)`: a parcela "1" se repete entre pagamentos diferentes, mas só existe uma vez por pagamento específico
+* Cria uma classe `@Embeddable` `ParcelaId`, com os dois campos (`pagamentoId`, `numeroParcela`), com `equals()`/`hashCode()` implementados corretamente (o JPA exige isso pra chave composta funcionar de verdade — comparando campo por campo, não identidade de objeto)
+* Anota `Parcela` com `@EmbeddedId private ParcelaId id;`
+* **Teste real obrigatório**: tenta inserir 2 linhas de `Parcela` com exatamente o mesmo `(pagamentoId, numeroParcela)` — confirma que o banco recusa (violação de chave primária); depois insere `(pagamentoId=1, numeroParcela=1)` e `(pagamentoId=2, numeroParcela=1)` — confirma que os dois convivem sem problema, provando que a chave é a **combinação**, não cada campo isolado
+
+## 🧪 Desafio 8 — Chaves Estrangeiras Múltiplas (`@ManyToOne` + `@JoinColumn`/`@JoinColumns`)
+
+* Continuação direta do Desafio 7 — cria uma entidade `Reembolso`, representando o estorno de um pagamento, com **duas chaves estrangeiras**:
+  * Uma FK simples pra `PagamentoSingleTable` (`@ManyToOne @JoinColumn(name = "pagamento_id")`) — qual pagamento está sendo estornado
+  * Uma FK **composta** pra `Parcela` (a entidade do Desafio 7), usando `@JoinColumns` (no plural) com dois `@JoinColumn` mapeando cada parte da chave composta (`pagamento_id`, `numero_parcela`) — qual parcela específica está sendo estornada
+* **Teste real de SQL obrigatório**: consulta direto no banco (`\d reembolso` ou `information_schema.table_constraints`) confirmando que as 2 constraints de FK existem de verdade, apontando pras tabelas certas
+* **Teste real de aplicação**: tenta salvar um `Reembolso` com um `pagamentoId` que não existe — confirma que o banco recusa (violação de FK) — e trata esse erro no `ApiGlobalExceptionHandler` (mais um handler: `DataIntegrityViolationException`, pra violação de FK)
+* **Teste de exclusão**: tenta apagar um `PagamentoSingleTable` que já tem um `Reembolso` associado — confirma o comportamento real (falha por causa da FK, ou seria preciso `ON DELETE CASCADE`/`SET NULL` — discute qual faz sentido nesse caso)
 
 ## 🚨 Regras
 
-* No annotation counts as "done" without the real check/test listed above — no theoretical-only answers
-* `@Qualifier` is theory-only by design (already solved differently in this project) — don't force new code just to use it
+* Nenhuma anotação conta como "feita" sem a checagem/teste real listado acima — sem resposta só teórica
+* `@Qualifier` é só teoria de propósito (já resolvido de outra forma nesse projeto) — não força código novo só pra usar ela
 
 ## ❓ Perguntas
 
-1. `@Enumerated`: Why does `EnumType.ORDINAL` become dangerous the moment someone reorders or inserts a new value in the middle of the enum? Give a concrete example using `StatusProcessamento`.
-2. `@Transient`: What's the difference between a `@Transient` JPA field and Java's own `transient` keyword (serialization)? They look similar but solve different problems.
-3. `@Value`: What's the risk of using `@Value` to inject a business rule (like a multa percentage) directly into a `@Service` class, compared to keeping it in a dedicated `@ConfigurationProperties` class? Does it matter at this project's size?
-4. `@Bean` vs `@Component`: Both register a bean, so why does Spring need two different mechanisms? When can you use `@Component`, and when are you forced to use `@Bean` instead? (Hint: think about `Queue` and `MessageConverter` — could they be `@Component`?)
-5. `@Embeddable`: Why does `Transferencia` embedding `DadosBancarios` still result in **one single table**, with no foreign key and no join — unlike a normal `@OneToOne`/`@ManyToOne` relationship?
-6. `@Qualifier`: You solved payment-type and multa-type dispatch with `Map<String, Bean>` instead of `@Qualifier`. In what situation would `@Qualifier` actually be the better choice over the `Map` pattern? Give a concrete case where injecting a `Map` wouldn't make sense.
-7. `@EmbeddedId`: Why are `equals()`/`hashCode()` on the `@Embeddable` id class mandatory for a composite key to work correctly — what breaks in JPA's persistence context (first-level cache, dirty checking) if you leave them as default `Object` identity? Also: what's the difference between `@EmbeddedId` and `@IdClass` — both solve composite keys, but in different ways — when would you pick one over the other?
+1. `@Enumerated`: Por que `EnumType.ORDINAL` fica perigoso no momento em que alguém reordena ou insere um valor novo no meio do enum? Dá um exemplo concreto usando `StatusProcessamento`.
+2. `@Transient`: Qual a diferença entre um campo `@Transient` do JPA e a palavra-chave `transient` do próprio Java (serialização)? Parecem iguais mas resolvem problemas diferentes.
+3. `@Value`: Qual o risco de usar `@Value` pra injetar uma regra de negócio (tipo percentual de multa) direto numa classe `@Service`, comparado a manter isso numa classe `@ConfigurationProperties` dedicada? Isso importa no tamanho desse projeto?
+4. `@Bean` vs `@Component`: os dois registram um bean, então por que o Spring precisa de dois mecanismos diferentes? Quando dá pra usar `@Component`, e quando você é obrigado a usar `@Bean`? (Dica: pensa em `Queue` e `MessageConverter` — dava pra serem `@Component`?)
+5. `@Embeddable`: Por que `Transferencia` embutindo `DadosBancarios` ainda resulta numa **única tabela**, sem chave estrangeira e sem join — diferente de um relacionamento normal `@OneToOne`/`@ManyToOne`?
+6. `@Qualifier`: Você resolveu o dispatch de tipo de pagamento e tipo de multa com `Map<String, Bean>` em vez de `@Qualifier`. Em que situação `@Qualifier` seria realmente a escolha melhor sobre o padrão `Map`? Dá um caso concreto onde injetar um `Map` não faria sentido.
+7. `@EmbeddedId`: Por que `equals()`/`hashCode()` na classe `@Embeddable` usada como id são obrigatórios pra chave composta funcionar direito — o que quebra no persistence context do JPA (cache de primeiro nível, dirty checking) se você deixar no `equals()`/`hashCode()` padrão de `Object`? Também: qual a diferença entre `@EmbeddedId` e `@IdClass` — os dois resolvem chave composta, mas de formas diferentes — quando você escolheria um sobre o outro?
+8. Chaves estrangeiras: qual a diferença entre `@JoinColumn` (FK simples) e `@JoinColumns` (no plural) — quando você precisa do plural? O que significa `ON DELETE CASCADE`/`RESTRICT`/`SET NULL` numa FK, e qual faz mais sentido pro `Reembolso` referenciar um `PagamentoSingleTable` que foi excluído? Sem a constraint de FK no banco (por exemplo, se alguém desativasse `spring.jpa.hibernate.ddl-auto` e esquecesse de criar a FK manualmente), o que impediria um `Reembolso` de apontar pra um pagamento inexistente — o Hibernate sozinho garante isso?
 
 ## 🎯 Avaliação (0 a 10)
 
-* `StatusProcessamento` enum working, with `EnumType.STRING` confirmed in the database
-* `@Value` multa percentage proven configurable via a real before/after test
-* `Transferencia` fully working end-to-end (`POST` + `GET`) with `@Embeddable` `DadosBancarios`
-* `diasParaVencimento` showing in the API response but absent from the database column list
-* `Parcela` with a working `@EmbeddedId`, correct `equals()`/`hashCode()`, and the real test proving the key is the combination of both fields
-* Understanding of `@Bean` vs `@Component`, and of when `@Qualifier` would actually beat the `Map` pattern
+* Enum `StatusProcessamento` funcionando, com `EnumType.STRING` confirmado no banco
+* Percentual de multa via `@Value` provado configurável com um teste real de antes/depois
+* `Transferencia` funcionando de ponta a ponta (`POST` + `GET`) com `@Embeddable` `DadosBancarios`
+* `diasParaVencimento` aparecendo na resposta da API mas ausente da lista de colunas do banco
+* `Parcela` com `@EmbeddedId` funcionando, `equals()`/`hashCode()` corretos, e o teste real provando que a chave é a combinação dos dois campos
+* `Reembolso` com as 2 FKs funcionando (simples + composta), teste SQL real confirmando as constraints no banco, e violação de FK tratada corretamente no `ApiGlobalExceptionHandler`
+* Entendimento de `@Bean` vs `@Component`, de quando `@Qualifier` venceria o padrão `Map`, e de `ON DELETE` — por que a constraint no banco importa mesmo com o JPA validando por cima
 
 ---
 
